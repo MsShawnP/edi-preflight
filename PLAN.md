@@ -51,7 +51,7 @@ EDI Health Audit engagement from specialty food brands doing EDI manually?
 
 First vertical slice — raw EDI text to structured output in a browser.
 
-- [ ] 1.1: X12 tokenizer
+- [x] 1.1: X12 tokenizer
     - Depends on: none
     - Done when: Tokenizes raw X12 into segments/elements/sub-elements
       with correct delimiter detection from ISA segment. Tests pass
