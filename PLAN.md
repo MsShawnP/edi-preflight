@@ -7,44 +7,263 @@ session. For session-by-session state, see HANDOFF.md.
 
 ## Goal
 
-[One sentence — what "done" looks like for this arc.]
+Ship a working two-mode EDI web tool at edi-preflight.fly.dev — inbound
+850 parser and outbound 856 validator covering Walmart, Amazon, UNFI,
+KeHE, and Costco — as a free, ungated lead-gen asset for the EDI Health
+Audit engagement.
 
 ## Why this arc, why now
 
-[One or two sentences. The reason matters when you come back in three
-weeks and wonder why this was the priority.]
+Specific prospect doing EDI by hand across five retailers. Amazon is
+disproportionate pain per order. Tool demonstrates capability, open-source
+rule library builds credibility, ungated access drives inbound leads.
+Slots into the lead-gen tool cadence alongside GTIN Validator.
 
 ## Business question this arc answers
 
-[One sentence. Direct connection to the project-level business question
-in CLAUDE.md.]
+Can a free two-mode EDI tool generate qualified leads for a $15K–$25K
+EDI Health Audit engagement from specialty food brands doing EDI manually?
 
-## Tasks
+## Scope confirmed via /clarify (2026-05-12)
 
-Work in vertical slices — one section/feature end-to-end before moving
-to the next. Visualizations get reviewed in their own slice, not
-deferred to a polish phase.
+- **Two modes:** (A) inbound 850 parsing → structured table + CSV/PDF,
+  (B) outbound 856 validation → severity-tagged report with
+  chargeback-dollar attribution
+- **Build order:** Inbound parser first (the hook), outbound validator
+  second
+- **Retailers:** All five (Walmart, Amazon, UNFI, KeHE, Costco) for
+  both modes
+- **Tech:** Custom EDI parser (no pyx12/bots-edi). FastAPI + HTMX +
+  Jinja2 on Fly.io. Stateless.
+- **URL:** edi-preflight.fly.dev (custom domain deferred)
+- **Name:** EDI Pre-flight
+- **Access:** Ungated, no login
+- **Error handling:** Helpful diagnostics for invalid/garbage input
+- **Not MVP:** Cinderhaven case study (follow-on content piece)
+- **Not in scope:** EDI transmission, auto-repair, ERP integration,
+  document types beyond 850/856, client-specific local tooling
 
-- [ ] Specific, scoped, actionable
-- [ ] Each one is a thing Claude Code could plausibly finish in one
-      session
-- [ ] If a task feels too big, break it down before adding it
-- [x] Completed items stay struck or checked, so the trail is visible
+---
+
+## Decomposition: EDI Pre-flight MVP
+
+### Milestone 1: Core Parser + Walmart 850 End-to-End
+
+First vertical slice — raw EDI text to structured output in a browser.
+
+- [ ] 1.1: X12 tokenizer
+    - Depends on: none
+    - Done when: Tokenizes raw X12 into segments/elements/sub-elements
+      with correct delimiter detection from ISA segment. Tests pass
+      against a hand-crafted sample.
+
+- [ ] 1.2: Envelope parser + retailer detection
+    - Depends on: 1.1
+    - Done when: Parses ISA/GS/ST/SE/GE/IEA structure, extracts
+      control numbers, identifies retailer from ISA/GS sender/receiver
+      IDs. Tests pass with five different retailer headers.
+
+- [ ] 1.3: Walmart 850 spec research + synthetic samples
+    - Depends on: none (research task — user-bottlenecked)
+    - Done when: Walmart 850 spec captured in YAML rule file. At least
+      3 synthetic samples in repo: basic PO, PO with SAC allowances,
+      PO with catch-weight items.
+
+- [ ] 1.4: 850 extraction module — Walmart
+    - Depends on: 1.1, 1.2, 1.3
+    - Done when: Given a Walmart 850, extracts PO header, line items
+      (PO1), allowances (SAC), ship-to (N1/N3/N4) as structured data.
+      Correctly separates allowance lines from line items. Tests pass
+      against all Walmart samples.
+
+- [ ] 1.5: FastAPI + HTMX skeleton with 850 inbound mode
+    - Depends on: 1.4
+    - Done when: Web page at localhost — paste or upload a Walmart 850,
+      see structured table with header summary, line items, allowances,
+      and retailer badge. Both paste and file upload work.
+
+- [ ] 1.6: CSV + PDF export for 850
+    - Depends on: 1.5
+    - Done when: Download buttons on results page produce correct CSV
+      (importable into Excel/ERP) and formatted PDF with header + line
+      items + allowances.
+
+### Milestone 2: Expand 850 to All Retailers
+
+Tasks 2.1–2.4 are independent of each other and can be parallelized.
+Each involves spec research (user-bottlenecked) + extraction quirks +
+samples.
+
+- [ ] 2.1: Amazon 850 — spec research + extraction + samples
+    - Depends on: 1.4
+    - Done when: Amazon 850 quirks documented in YAML. At least 2
+      synthetic samples. Extraction handles Amazon-specific fields.
+      Tests pass.
+
+- [ ] 2.2: UNFI 850 — spec research + extraction + samples
+    - Depends on: 1.4
+    - Done when: Same verification as 2.1, for UNFI.
+
+- [ ] 2.3: KeHE 850 — spec research + extraction + samples
+    - Depends on: 1.4
+    - Done when: Same verification as 2.1, for KeHE.
+
+- [ ] 2.4: Costco 850 — spec research + extraction + samples
+    - Depends on: 1.4
+    - Done when: Same verification as 2.1, for Costco.
+
+- [ ] 2.5: 850 integration — all five retailers in web UI
+    - Depends on: 1.5, 2.1–2.4
+    - Done when: Web UI auto-detects retailer from document headers.
+      All five retailers parse correctly with retailer-specific
+      handling. Tests pass against all sample docs.
+
+### Milestone 3: Walmart 856 End-to-End
+
+Second vertical slice — outbound validation mode in the browser.
+
+- [ ] 3.1: Walmart 856 spec research + synthetic samples
+    - Depends on: none (research task — user-bottlenecked)
+    - Done when: Walmart 856 spec in YAML. Chargeback fee schedule
+      documented. At least 5 samples: 1 clean, 4 with errors (wrong HL
+      loop order, missing MEA for catch-weight, bad DTM format, missing
+      required segment).
+
+- [ ] 3.2: 856 structural validation
+    - Depends on: 1.1, 1.2
+    - Done when: Validates envelope completeness, segment ordering,
+      control number matching. Catches missing GS, ST/SE mismatch,
+      bad terminators. Tests pass.
+
+- [ ] 3.3: 856 field-level validation
+    - Depends on: 3.2
+    - Done when: Validates required fields present and correctly
+      formatted (dates in CCYYMMDD, valid qualifier codes, numeric
+      ranges). Tests pass against samples with field-level errors.
+
+- [ ] 3.4: Walmart 856 retailer-specific rules + severity tagging
+    - Depends on: 3.1, 3.3
+    - Done when: HL loop ordering (S→O→I→P) validated. Catch-weight
+      MEA*WT checked. ASN timing checked. Each finding tagged with
+      severity (blocks-transmission / will-cause-chargeback /
+      may-cause-chargeback / cosmetic) and dollar estimate from fee
+      schedule. Tests pass against all Walmart 856 samples.
+
+- [ ] 3.5: Web UI — 856 outbound mode + validation report
+    - Depends on: 3.4, 1.5
+    - Done when: Second mode on landing page. Paste/upload 856, select
+      retailer, see three-layer report (structural / field-level /
+      retailer-spec) with severity badges and dollar estimates.
+
+- [ ] 3.6: PDF export for 856 validation report
+    - Depends on: 3.5
+    - Done when: Download button produces formatted PDF of the
+      three-layer validation report with severity tags and dollar
+      estimates.
+
+### Milestone 4: Expand 856 to All Retailers
+
+Tasks 4.1–4.4 are independent and parallelizable. Each involves spec
+research (user-bottlenecked) + retailer-specific rules + samples.
+
+- [ ] 4.1: Amazon 856 — spec research + rules + samples
+    - Depends on: 3.3
+    - Done when: Amazon 856 rules in YAML with chargeback fees. Samples
+      with errors. Validator catches Amazon-specific violations. Tests
+      pass.
+
+- [ ] 4.2: UNFI 856 — spec research + rules + samples
+    - Depends on: 3.3
+    - Done when: Same verification as 4.1, for UNFI.
+
+- [ ] 4.3: KeHE 856 — spec research + rules + samples
+    - Depends on: 3.3
+    - Done when: Same verification as 4.1, for KeHE.
+
+- [ ] 4.4: Costco 856 — spec research + rules + samples
+    - Depends on: 3.3
+    - Done when: Same verification as 4.1, for Costco.
+
+- [ ] 4.5: 856 integration — all five retailers in web UI
+    - Depends on: 3.5, 4.1–4.4
+    - Done when: Retailer selector works for all five. Correct rule set
+      applied per retailer. Tests pass against all 856 samples.
+
+### Milestone 5: Error Handling + Input Validation
+
+- [ ] 5.1: Input validation and diagnostic messages
+    - Depends on: 2.5, 4.5
+    - Done when: Non-EDI input (CSV, JSON, plain text) returns helpful
+      "this doesn't look like EDI" message. Truncated documents
+      identified ("missing SE/IEA — document may be truncated"). Wrong
+      transaction set flagged ("this is an 810 invoice, not an 850").
+      Tests cover at least 6 bad-input scenarios.
+
+### Milestone 6: Deploy + Finalize
+
+- [ ] 6.1: Dockerfile + fly.toml + deploy to Fly.io
+    - Depends on: 5.1
+    - Done when: Tool accessible at edi-preflight.fly.dev. Both modes
+      functional. "We don't store your documents" notice visible on UI.
+
+- [ ] 6.2: Retailer spec rule library finalized
+    - Depends on: 4.5
+    - Done when: All five retailers' 850 + 856 rules in clean YAML in
+      `rules/` directory. README documents the rule format and what
+      each file covers.
+
+- [ ] 6.3: Sample EDI documents curated for repo
+    - Depends on: 2.5, 4.5
+    - Done when: 20+ sample documents in `samples/` covering all five
+      retailers, both document types, common patterns and failure
+      modes. README explains each sample's purpose.
+
+---
+
+## Dependency summary
+
+```
+1.1 (tokenizer) ──→ 1.2 (envelope) ──→ 1.4 (Walmart 850) ──→ 1.5 (web UI) ──→ 1.6 (export)
+                                    ├──→ 3.2 (856 structural) ──→ 3.3 (field) ──→ 3.4 (Walmart rules)
+                                    │                                           ├──→ 4.1–4.4 (other retailers)
+                                    │                                           └──→ 3.5 (856 UI) ──→ 3.6 (PDF)
+                                    └──→ 2.1–2.4 (other 850s) ──→ 2.5 (integration)
+1.3 (Walmart spec) ─────────────────────→ 1.4
+3.1 (Walmart 856 spec) ─────────────────→ 3.4
+```
+
+Tasks marked "user-bottlenecked" (1.3, 2.1–2.4, 3.1, 4.1–4.4) require
+retailer spec research. Claude can help with research but the user needs
+to verify accuracy against actual specs from vendor portals.
+
+---
 
 ## Out of scope for this arc
 
-- Things explicitly NOT being done in this round
-- Captures the decisions about what to defer
-- Prevents scope creep mid-session
+- Cinderhaven 90-day case study and synthetic dataset
+- EDI transmission (AS2/SFTP/VAN integration)
+- Auto-repair / auto-fix of outbound documents
+- Real-time monitoring or alerting
+- Document types beyond 850 and 856
+- Direct ERP/order-system integration
+- Custom domain setup
+- Client-specific local deliverable tooling
 
 ## Definition of done for this arc
 
-- [ ] Specific, verifiable conditions
-- [ ] Not "the prose is better" — "every section's executive summary
-      has been reviewed and either approved or marked for domain
-      insertion"
-- [ ] When all of these are checked, the arc is done and a new PLAN.md
-      arc gets defined
+- [ ] Inbound 850 parser handles documents from all five retailers with
+      correct line-item extraction, allowance separation, and retailer
+      detection
+- [ ] Outbound 856 validator checks structural, field-level, and
+      retailer-specific rules for all five retailers
+- [ ] Validation findings tagged with severity and chargeback-dollar
+      estimates
+- [ ] CSV and PDF export working for inbound mode
+- [ ] PDF export working for outbound validation report
+- [ ] Helpful error messages for invalid/truncated/non-EDI input
+- [ ] Deployed and accessible at edi-preflight.fly.dev
+- [ ] Retailer spec rule library in YAML, in the repo
+- [ ] Sample EDI documents (synthetic) in the repo for try-without-data
 
 ---
 
