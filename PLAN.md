@@ -63,7 +63,7 @@ First vertical slice — raw EDI text to structured output in a browser.
       control numbers, identifies retailer from ISA/GS sender/receiver
       IDs. Tests pass with five different retailer headers.
 
-- [ ] 1.3: Walmart 850 spec research + synthetic samples
+- [x] 1.3: Walmart 850 spec research + synthetic samples
     - Depends on: none (research task — user-bottlenecked)
     - Done when: Walmart 850 spec captured in YAML rule file. At least
       3 synthetic samples in repo: basic PO, PO with SAC allowances,
