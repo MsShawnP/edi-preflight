@@ -1,0 +1,190 @@
+# Walmart 850 Purchase Order — Spec Reference (Version 5010)
+# Used by the 850 extraction module to identify segments, parse fields,
+# and flag non-obvious elements (allowances, catch-weight, promo pricing).
+
+retailer: walmart
+document_type: "850"
+version: "005010"
+
+# --- Segment ordering (header → detail → summary) ---
+
+header_segments:
+  - segment: BEG
+    required: true
+    description: Beginning segment for purchase order
+    elements:
+      BEG01: { name: purpose_code, values: ["00"], description: "00 = Original" }
+      BEG02: { name: po_type, values: ["DS", "SA", "BE", "BK"], description: "DS=Dropship, SA=Stand-alone, BE=Blanket est, BK=Blanket firm" }
+      BEG03: { name: po_number, description: "Walmart PO number" }
+      BEG05: { name: date, format: CCYYMMDD }
+
+  - segment: REF
+    required: false
+    description: Reference information
+    qualifiers:
+      DP: department_number
+      VR: vendor_reference
+      IA: internal_vendor_number
+
+  - segment: DTM
+    required: false
+    max_uses: 10
+    description: Date/time references
+    qualifiers:
+      "002": requested_delivery_date
+      "004": purchase_order_date
+      "010": requested_ship_date
+      "037": ship_not_before
+      "063": do_not_deliver_after
+
+  - segment: FOB
+    required: false
+    description: FOB related instructions
+
+  - segment: SAC
+    required: false
+    max_uses: 25
+    level: header
+    description: Header-level allowances and charges
+    elements:
+      SAC01: { name: indicator, values: ["A", "C"], description: "A=Allowance, C=Charge" }
+      SAC02: { name: code, description: "Service/allowance/charge code" }
+      SAC05: { name: amount, format: decimal }
+      SAC07: { name: percent, format: decimal }
+      SAC12: { name: handling_code, values: ["06", "07"], description: "06=Deduct from invoice, 07=Add to invoice" }
+      SAC15: { name: description, description: "Free-form text" }
+
+  - segment: ITD
+    required: false
+    description: Terms of sale/deferred payment
+
+  - segment: TD5
+    required: false
+    description: Carrier details
+
+n1_loop:
+  description: Party identification (ship-to, bill-to)
+  entity_codes:
+    ST: { name: ship_to, required: true, description: "Delivery location — Walmart DC/RDC/store" }
+    BT: { name: bill_to, required: false, description: "Billing address" }
+    SH: { name: shipper, required: false }
+    VN: { name: vendor, required: false }
+  supporting_segments:
+    - N3  # street address
+    - N4  # city, state, ZIP
+
+# --- Detail section (PO1 loop) ---
+
+po1_loop:
+  segment: PO1
+  required: true
+  max_uses: 100000
+  description: Baseline item data — one per line item
+  elements:
+    PO101: { name: line_number, description: "Sequential (1, 2, 3...)" }
+    PO102: { name: quantity, format: numeric }
+    PO103: { name: unit_of_measure, common_values: ["EA", "CS", "BX", "CT", "DZ", "LB", "KG", "CW"] }
+    PO104: { name: unit_price, format: decimal }
+    PO105: { name: price_basis, common_values: ["QE", "ZZ"] }
+  product_id_pairs:
+    # PO106/PO107, PO108/PO109, etc. — up to 10 qualifier/value pairs
+    IN: buyers_item_number
+    UP: gtin_12_upc
+    EN: gtin_13_ean
+    UK: gtin_14
+    VN: vendor_item_number
+    SK: sku
+    BP: buyers_part_number
+
+  child_segments:
+    - segment: PID
+      required: false
+      max_uses: 1000
+      description: Product description
+      elements:
+        PID01: { name: type, values: ["F", "S", "X"], description: "F=Free-form, S=Structured" }
+        PID05: { name: description, description: "Free-form product description" }
+
+    - segment: PO4
+      required: false
+      description: Item physical details (inner pack)
+      elements:
+        PO401: { name: pack_quantity, format: numeric, description: "Units per case/pack" }
+        PO402: { name: inner_quantity, format: numeric }
+        PO403: { name: unit_of_measure }
+
+    - segment: SAC
+      required: false
+      max_uses: 25
+      level: line_item
+      description: Line-item level allowances and charges
+
+    - segment: MEA
+      required: false
+      description: Measurements (catch-weight items)
+      elements:
+        MEA01: { name: qualifier, common_values: ["WT"], description: "WT=Weight" }
+        MEA02: { name: unit, common_values: ["LB", "KG", "OZ"] }
+        MEA03: { name: value, format: decimal }
+
+    - segment: SDQ
+      required: false
+      description: Destination/store-level quantities
+
+# --- Summary section ---
+
+summary_segments:
+  - segment: CTT
+    required: false
+    description: Transaction totals
+    elements:
+      CTT01: { name: line_item_count, format: integer }
+      CTT02: { name: hash_total, format: decimal, description: "Sum of PO102 quantities" }
+
+  - segment: AMT
+    required: false
+    description: Monetary amount summary
+    elements:
+      AMT01: { name: qualifier, common_values: ["35"], description: "35=Purchase order amount" }
+      AMT02: { name: amount, format: decimal }
+
+# --- SAC code reference (Walmart common codes) ---
+
+sac_codes:
+  promotional:
+    F800: Promotional Allowance
+    F810: Promotional Discount
+    B720: Coop Advertising/Merchandising Allowance
+    A260: Advertising Allowance
+    E720: New Distribution Allowance
+    G960: Slotting Allowance
+  freight:
+    D240: Freight Charge
+    D270: Fuel Surcharge
+    E340: LTL Charge
+    H940: Terminal/Handling Charge
+  standard:
+    D340: Goods and Services Charge
+    G830: Shipping and Handling
+    H850: Tax
+
+# --- Walmart department codes (food-relevant) ---
+
+departments:
+  "80": Service Deli
+  "81": Commercial Bread
+  "92": Grocery (Dry Goods)
+  "93": Meat
+  "94": Produce
+  "95": DSD Grocery/Snacks
+  "97": Wall Deli
+  "98": Bakery
+
+# --- DTM qualifier reference ---
+
+dtm_qualifiers:
+  "002": Requested Delivery Date
+  "004": Purchase Order Date
+  "010": Requested Ship Date
+  "037": Ship Not Before Date
+  "063": Do Not Deliver After Date

@@ -57,7 +57,7 @@ First vertical slice — raw EDI text to structured output in a browser.
       with correct delimiter detection from ISA segment. Tests pass
       against a hand-crafted sample.
 
-- [ ] 1.2: Envelope parser + retailer detection
+- [x] 1.2: Envelope parser + retailer detection
     - Depends on: 1.1
     - Done when: Parses ISA/GS/ST/SE/GE/IEA structure, extracts
       control numbers, identifies retailer from ISA/GS sender/receiver
