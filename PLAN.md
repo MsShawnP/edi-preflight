@@ -191,7 +191,7 @@ research (user-bottlenecked) + retailer-specific rules + samples.
 
 ### Milestone 5: Error Handling + Input Validation
 
-- [ ] 5.1: Input validation and diagnostic messages
+- [x] 5.1: Input validation and diagnostic messages
     - Depends on: 2.5, 4.5
     - Done when: Non-EDI input (CSV, JSON, plain text) returns helpful
       "this doesn't look like EDI" message. Truncated documents

@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from src.envelope import EnvelopeError, Retailer, parse_envelope
+from src.envelope import EnvelopeError, Retailer, TransactionType, parse_envelope
 from src.export_csv import export_850_csv
 from src.export_pdf import export_850_pdf
 from src.export_validation_pdf import export_validation_pdf
@@ -197,6 +197,18 @@ async def validate_edi(
             "error": f"Unexpected error: {e}",
             "hint": "The document may not be a valid EDI X12 file.",
         })
+
+    # Check transaction type — warn if this isn't an 856
+    if envelope.transactions:
+        tx_type = envelope.transactions[0].transaction_type
+        if tx_type != TransactionType.ASN_856:
+            type_label = tx_type.value if tx_type != TransactionType.UNKNOWN else "unknown"
+            return templates.TemplateResponse(request, "partials/error.html", {
+                "error": f"This document is a {type_label} transaction, not an 856 ASN.",
+                "hint": "The outbound validator checks 856 Advance Ship Notices. "
+                        "Switch to the Inbound 850 Parser tab if this is a "
+                        "purchase order.",
+            })
 
     # Run structural + field-level validation
     result = validate_856(envelope)
