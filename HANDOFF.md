@@ -9,6 +9,44 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-05-12 — All milestones complete: ready for deploy
+
+**Phase:** Phase 2 — Build it right (all milestones done, deploy pending)
+
+**Goal:** Complete the full PLAN.md arc — Milestones 3–6 in one session.
+
+**Completed:**
+- Milestone 3: Walmart 856 end-to-end — three-layer validation (structural, field-level, retailer-specific), severity tagging, chargeback-dollar attribution, web UI with two-mode tabs, PDF export. 5 Walmart 856 samples. Walmart YAML spec with fee schedule.
+- Milestone 4: Expanded 856 to all retailers — extracted shared validation into validate_856_common.py with RetailerConfig dataclass. Created slim validator modules for Amazon ($50/case), UNFI ($25/case), KeHE ($75/case), Costco ($150/pallet). 8 new samples, 4 YAML specs, 31 tests. Retailer selector dropdown with all 5 retailers.
+- Milestone 5: Input validation — format-specific diagnostics for JSON/CSV/XML input, wrong-transaction-type guard in /validate endpoint, 15 tests covering 8 bad-input scenarios.
+- Milestone 6: Deploy config — Dockerfile (python:3.13-slim), fly.toml (sea region, shared-cpu-1x), .dockerignore. READMEs for rules/ (10 YAML specs) and samples/ (24 synthetic EDI files).
+
+**Tried, didn't work:**
+- SE01 segment counts miscounted in several samples — verified with script, fixed
+- SSCC-18 barcodes initially 20 digits instead of 18 — regenerated with mod-10 check digit script
+- HL hierarchy check too permissive (allowed S→I) — switched to strict _VALID_CHILDREN mapping
+- KeHE ISA08 field 14 chars instead of 15 — broke ISA fixed-width parsing, tildes leaked into element values. Fixed by padding to 15 chars.
+- Preview screenshot timed out — used accessibility tree snapshot instead
+
+**State:** All 6 milestones complete (23/23 tasks done). 254 tests passing. Branch `claude/sweet-wescoff-9fbcc7` is 7 commits ahead of origin/main. Working tree clean.
+
+**Next concrete action:** Push branch, create PR, then `flyctl deploy` to go live at edi-preflight.fly.dev. After deploy, verify both modes work in production. Consider the Cinderhaven case study as a follow-on content piece (out of scope for this arc).
+
+**Blockers:** None. Deployment requires Fly.io account + flyctl CLI.
+
+**Key files added this session:**
+- src/validate_856.py — core 856 validation (structural + field-level)
+- src/validate_856_common.py — shared retailer validation with RetailerConfig
+- src/validate_856_walmart.py, _amazon.py, _unfi.py, _kehe.py, _costco.py — retailer validators
+- src/export_validation_pdf.py — ReportLab PDF for validation reports
+- src/templates/partials/validation_results.html — three-layer validation report UI
+- rules/*_856.yaml — 5 retailer 856 specs with chargeback schedules
+- samples/*/856_*.edi — 13 synthetic 856 samples
+- tests/test_validate_856*.py — 5 test files, tests/test_input_validation.py
+- Dockerfile, fly.toml, .dockerignore
+
+---
+
 ## 2026-05-12 — Milestone 1 complete: CSV + PDF export (Task 1.6)
 
 **Phase:** Phase 2 — Build it right (Milestone 1 complete, ready for Milestone 2)
