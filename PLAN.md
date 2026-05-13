@@ -166,25 +166,25 @@ Second vertical slice — outbound validation mode in the browser.
 Tasks 4.1–4.4 are independent and parallelizable. Each involves spec
 research (user-bottlenecked) + retailer-specific rules + samples.
 
-- [ ] 4.1: Amazon 856 — spec research + rules + samples
+- [x] 4.1: Amazon 856 — spec research + rules + samples
     - Depends on: 3.3
     - Done when: Amazon 856 rules in YAML with chargeback fees. Samples
       with errors. Validator catches Amazon-specific violations. Tests
       pass.
 
-- [ ] 4.2: UNFI 856 — spec research + rules + samples
+- [x] 4.2: UNFI 856 — spec research + rules + samples
     - Depends on: 3.3
     - Done when: Same verification as 4.1, for UNFI.
 
-- [ ] 4.3: KeHE 856 — spec research + rules + samples
+- [x] 4.3: KeHE 856 — spec research + rules + samples
     - Depends on: 3.3
     - Done when: Same verification as 4.1, for KeHE.
 
-- [ ] 4.4: Costco 856 — spec research + rules + samples
+- [x] 4.4: Costco 856 — spec research + rules + samples
     - Depends on: 3.3
     - Done when: Same verification as 4.1, for Costco.
 
-- [ ] 4.5: 856 integration — all five retailers in web UI
+- [x] 4.5: 856 integration — all five retailers in web UI
     - Depends on: 3.5, 4.1–4.4
     - Done when: Retailer selector works for all five. Correct rule set
       applied per retailer. Tests pass against all 856 samples.

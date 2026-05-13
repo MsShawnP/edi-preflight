@@ -11,6 +11,10 @@ from src.export_pdf import export_850_pdf
 from src.export_validation_pdf import export_validation_pdf
 from src.extract_850 import ExtractionError, extract_850
 from src.validate_856 import validate_856
+from src.validate_856_amazon import validate_856_amazon
+from src.validate_856_costco import validate_856_costco
+from src.validate_856_kehe import validate_856_kehe
+from src.validate_856_unfi import validate_856_unfi
 from src.validate_856_walmart import validate_856_walmart
 from src.x12_tokenizer import TokenizeError, tokenize
 
@@ -149,6 +153,10 @@ async def export_pdf(edi_text: str = Form("")):
 
 _RETAILER_VALIDATORS = {
     Retailer.WALMART: validate_856_walmart,
+    Retailer.AMAZON: validate_856_amazon,
+    Retailer.UNFI: validate_856_unfi,
+    Retailer.KEHE: validate_856_kehe,
+    Retailer.COSTCO: validate_856_costco,
 }
 
 _RETAILER_LABELS = {

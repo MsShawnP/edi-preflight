@@ -1,0 +1,167 @@
+# Amazon 856 ASN (Advance Ship Notice) — Spec Reference (Version 5010)
+# Amazon Vendor Central EDI compliance. Includes chargeback fee schedule
+# for vendor non-compliance penalties.
+
+retailer: amazon
+document_type: "856"
+version: "005010"
+
+# --- Envelope requirements ---
+
+envelope:
+  gs_functional_id: SH
+  st_transaction_type: "856"
+
+# --- BSN (Beginning Segment for Ship Notice) ---
+
+bsn:
+  required: true
+  elements:
+    BSN01: { name: purpose_code, required: true, values: ["00", "05"], description: "00=Original, 05=Replace" }
+    BSN02: { name: shipment_id, required: true, description: "Unique shipment identification number" }
+    BSN03: { name: date, required: true, format: CCYYMMDD }
+    BSN04: { name: time, required: true, format: HHMM }
+
+# --- HL loop structure ---
+# Amazon uses the same S→O→I→P hierarchy as most retailers.
+
+hl_loop:
+  required: true
+  levels:
+    S:
+      name: shipment
+      code: "S"
+      required: true
+      parent: null
+      child_segments:
+        - segment: TD5
+          required: true
+          description: Carrier routing — SCAC code required
+          elements:
+            TD501: { name: routing_qualifier, values: ["B", "O"] }
+            TD502: { name: routing_id, description: "SCAC code" }
+            TD503: { name: transport_method, values: ["M", "R", "S", "A", "LT"] }
+        - segment: DTM
+          required: true
+          qualifiers:
+            "011": shipped_date
+            "017": estimated_delivery_date
+        - segment: N1
+          required: true
+          entity_codes:
+            SF: { name: ship_from, required: true }
+            ST: { name: ship_to, required: true }
+
+    O:
+      name: order
+      code: "O"
+      required: true
+      parent: S
+      child_segments:
+        - segment: PRF
+          required: true
+          elements:
+            PRF01: { name: po_number, required: true, description: "Amazon PO number" }
+
+    I:
+      name: tare
+      code: "I"
+      required: true
+      parent: O
+      child_segments:
+        - segment: MAN
+          required: true
+          description: SSCC-18 barcode required on every pallet/case
+          elements:
+            MAN01: { name: qualifier, values: ["GM"] }
+            MAN02: { name: number, description: "SSCC-18 (18 digits)" }
+
+    P:
+      name: pack
+      code: "P"
+      required: false
+      parent: I
+      child_segments:
+        - segment: SN1
+          required: true
+        - segment: LIN
+          required: false
+        - segment: MEA
+          required: false
+
+# --- Chargeback fee schedule (Amazon Vendor Compliance) ---
+# Amazon calls these "shortage claims" and "chargebacks".
+# Amounts are approximate — actual amounts vary by category.
+
+chargebacks:
+  missing_asn:
+    fee: 250.00
+    per: shipment
+    severity: blocks-transmission
+    description: ASN not received or not processable
+
+  missing_sscc18:
+    fee: 50.00
+    per: case
+    severity: will-cause-chargeback
+    description: Missing SSCC-18 barcode label
+
+  invalid_sscc18_format:
+    fee: 50.00
+    per: case
+    severity: will-cause-chargeback
+    description: SSCC-18 not 18 digits or invalid check digit
+
+  wrong_hl_hierarchy:
+    fee: 0.00
+    per: document
+    severity: blocks-transmission
+    description: HL loop hierarchy violation
+
+  missing_catch_weight:
+    fee: 50.00
+    per: item
+    severity: will-cause-chargeback
+    description: Catch-weight item without MEA*WT
+
+  missing_po_reference:
+    fee: 0.00
+    per: order
+    severity: blocks-transmission
+    description: Missing PRF at order level
+
+  missing_ship_to:
+    fee: 0.00
+    per: document
+    severity: blocks-transmission
+    description: No N1*ST at shipment level
+
+  missing_ship_date:
+    fee: 0.00
+    per: document
+    severity: blocks-transmission
+    description: No DTM*011 at shipment level
+
+  missing_carrier:
+    fee: 0.00
+    per: document
+    severity: may-cause-chargeback
+    description: No TD5 carrier routing
+
+severity_levels:
+  blocks-transmission:
+    order: 1
+    label: Blocks Transmission
+    color: "#c0392b"
+  will-cause-chargeback:
+    order: 2
+    label: Will Cause Chargeback
+    color: "#e67e22"
+  may-cause-chargeback:
+    order: 3
+    label: May Cause Chargeback
+    color: "#f1c40f"
+  cosmetic:
+    order: 4
+    label: Cosmetic
+    color: "#95a5a6"
