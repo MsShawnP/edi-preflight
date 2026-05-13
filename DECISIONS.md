@@ -45,7 +45,10 @@ Each entry:
 
 ## Output Formats
 
-[Decisions about deliverable formats, structure, organization]
+### 2026-05-12 — Use ReportLab for PDF generation
+- **Why:** ReportLab is the Python standard for programmatic PDF generation — stronger portfolio signal than lighter alternatives. Considered fpdf2 (simpler API, sufficient for tables) and WeasyPrint (HTML-to-PDF, but requires Cairo/Pango system libraries which complicate Fly.io Docker). ReportLab is pure Python, no system deps, and gives enough layout control for the 856 validation report PDFs later (severity badges, dollar estimates, three-layer reports).
+- **Scope:** src/export_pdf.py and any future PDF export modules
+- **Do not:** Pull in WeasyPrint or add system-level rendering dependencies
 
 ---
 

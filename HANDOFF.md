@@ -9,6 +9,45 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-05-12 — Milestone 1 complete: CSV + PDF export (Task 1.6)
+
+**Phase:** Phase 2 — Build it right (Milestone 1 complete, ready for Milestone 2)
+
+**Goal:** Add CSV and PDF export to the 850 results page, completing Milestone 1.
+
+**Completed:**
+- Added ReportLab dependency to pyproject.toml
+- Built src/export_csv.py — one row per line item with PO header context, ship-to, catch-weight flags, extended prices
+- Built src/export_pdf.py — ReportLab formatted PDF with header card, key dates, ship-to, line items table (alternating rows), header allowances table, totals, footer
+- Added POST /export/csv and POST /export/pdf endpoints to src/main.py
+- Extracted _read_edi_content helper to share input handling between /parse and export routes
+- Added download buttons to results template (hidden forms with raw EDI, regular POST — not HTMX)
+- Added .export-bar and .btn-export CSS (outlined buttons, hover fill)
+- 19 new tests (10 CSV + 9 PDF) — 99 total passing
+- Logged ReportLab decision to DECISIONS.md under Output Formats
+- Committed: 1a0ddbb
+
+**Tried, didn't work:**
+- PDF test for allowance content (`assert b"Allowance" in pdf_bytes`) failed because ReportLab compresses page content streams. Fixed by comparing PDF size against basic PO instead.
+- Test referenced wrong sample filename (850_allowances.edi vs 850_with_allowances.edi) — fixed.
+
+**State:** Milestone 1 (6/6) is complete. The Walmart 850 vertical slice is done end-to-end: paste/upload → parsed table → CSV/PDF download. 99 tests pass. Branch has 1 unpushed commit.
+
+**Next concrete action:** Milestone 2 — expand 850 to all retailers. Tasks 2.1–2.4 (Amazon, UNFI, KeHE, Costco) are independent and user-bottlenecked (spec research needed). Each involves: spec YAML, synthetic samples, extraction quirks. Then 2.5 integrates all five into the web UI.
+
+**Blockers:** None. Tasks 2.1–2.4 need retailer spec research — Claude can help research but user needs to verify against actual vendor portal specs.
+
+**Key files:**
+- src/export_csv.py — CSV export module
+- src/export_pdf.py — PDF export module (ReportLab)
+- src/main.py — FastAPI app with /parse, /export/csv, /export/pdf endpoints
+- src/extract_850.py — PurchaseOrder dataclass and extraction logic
+- src/templates/partials/results.html — results display with download buttons
+- PLAN.md — full task decomposition (Milestones 1–6)
+- DECISIONS.md — ReportLab decision logged
+
+---
+
 ## 2026-05-12 — FastAPI + HTMX web skeleton complete (Task 1.5)
 
 **Phase:** Phase 2 — Build it right (mid-implementation, Milestone 1 nearly complete)
