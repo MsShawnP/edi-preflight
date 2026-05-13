@@ -201,18 +201,18 @@ research (user-bottlenecked) + retailer-specific rules + samples.
 
 ### Milestone 6: Deploy + Finalize
 
-- [ ] 6.1: Dockerfile + fly.toml + deploy to Fly.io
+- [x] 6.1: Dockerfile + fly.toml + deploy to Fly.io
     - Depends on: 5.1
     - Done when: Tool accessible at edi-preflight.fly.dev. Both modes
       functional. "We don't store your documents" notice visible on UI.
 
-- [ ] 6.2: Retailer spec rule library finalized
+- [x] 6.2: Retailer spec rule library finalized
     - Depends on: 4.5
     - Done when: All five retailers' 850 + 856 rules in clean YAML in
       `rules/` directory. README documents the rule format and what
       each file covers.
 
-- [ ] 6.3: Sample EDI documents curated for repo
+- [x] 6.3: Sample EDI documents curated for repo
     - Depends on: 2.5, 4.5
     - Done when: 20+ sample documents in `samples/` covering all five
       retailers, both document types, common patterns and failure
