@@ -122,26 +122,26 @@ samples.
 
 Second vertical slice — outbound validation mode in the browser.
 
-- [ ] 3.1: Walmart 856 spec research + synthetic samples
+- [x] 3.1: Walmart 856 spec research + synthetic samples
     - Depends on: none (research task — user-bottlenecked)
     - Done when: Walmart 856 spec in YAML. Chargeback fee schedule
       documented. At least 5 samples: 1 clean, 4 with errors (wrong HL
       loop order, missing MEA for catch-weight, bad DTM format, missing
       required segment).
 
-- [ ] 3.2: 856 structural validation
+- [x] 3.2: 856 structural validation
     - Depends on: 1.1, 1.2
     - Done when: Validates envelope completeness, segment ordering,
       control number matching. Catches missing GS, ST/SE mismatch,
       bad terminators. Tests pass.
 
-- [ ] 3.3: 856 field-level validation
+- [x] 3.3: 856 field-level validation
     - Depends on: 3.2
     - Done when: Validates required fields present and correctly
       formatted (dates in CCYYMMDD, valid qualifier codes, numeric
       ranges). Tests pass against samples with field-level errors.
 
-- [ ] 3.4: Walmart 856 retailer-specific rules + severity tagging
+- [x] 3.4: Walmart 856 retailer-specific rules + severity tagging
     - Depends on: 3.1, 3.3
     - Done when: HL loop ordering (S→O→I→P) validated. Catch-weight
       MEA*WT checked. ASN timing checked. Each finding tagged with
@@ -149,13 +149,13 @@ Second vertical slice — outbound validation mode in the browser.
       may-cause-chargeback / cosmetic) and dollar estimate from fee
       schedule. Tests pass against all Walmart 856 samples.
 
-- [ ] 3.5: Web UI — 856 outbound mode + validation report
+- [x] 3.5: Web UI — 856 outbound mode + validation report
     - Depends on: 3.4, 1.5
     - Done when: Second mode on landing page. Paste/upload 856, select
       retailer, see three-layer report (structural / field-level /
       retailer-spec) with severity badges and dollar estimates.
 
-- [ ] 3.6: PDF export for 856 validation report
+- [x] 3.6: PDF export for 856 validation report
     - Depends on: 3.5
     - Done when: Download button produces formatted PDF of the
       three-layer validation report with severity tags and dollar

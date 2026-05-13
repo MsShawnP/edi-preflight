@@ -5,10 +5,13 @@ from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from src.envelope import EnvelopeError, parse_envelope
+from src.envelope import EnvelopeError, Retailer, parse_envelope
 from src.export_csv import export_850_csv
 from src.export_pdf import export_850_pdf
+from src.export_validation_pdf import export_validation_pdf
 from src.extract_850 import ExtractionError, extract_850
+from src.validate_856 import validate_856
+from src.validate_856_walmart import validate_856_walmart
 from src.x12_tokenizer import TokenizeError, tokenize
 
 _SRC_DIR = Path(__file__).parent
@@ -136,6 +139,118 @@ async def export_pdf(edi_text: str = Form("")):
 
     pdf_bytes = export_850_pdf(po)
     filename = f"PO_{po.po_number}.pdf" if po.po_number else "purchase_order.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+_RETAILER_VALIDATORS = {
+    Retailer.WALMART: validate_856_walmart,
+}
+
+_RETAILER_LABELS = {
+    Retailer.WALMART: "Walmart",
+    Retailer.AMAZON: "Amazon",
+    Retailer.UNFI: "UNFI",
+    Retailer.KEHE: "KeHE",
+    Retailer.COSTCO: "Costco",
+    Retailer.UNKNOWN: "Unknown",
+}
+
+
+@app.post("/validate", response_class=HTMLResponse)
+async def validate_edi(
+    request: Request,
+    edi_text: str = Form(""),
+    retailer: str = Form("auto"),
+    file: UploadFile | None = File(default=None),
+):
+    content = await _read_edi_content(edi_text, file)
+
+    if not content.strip():
+        return templates.TemplateResponse(request, "partials/error.html", {
+            "error": "No input provided.",
+            "hint": "Paste an EDI document in the text area or upload an .edi file.",
+        })
+
+    try:
+        tokens = tokenize(content)
+        envelope = parse_envelope(tokens)
+    except (TokenizeError, EnvelopeError) as e:
+        return templates.TemplateResponse(request, "partials/error.html", {
+            "error": str(e),
+            "hint": getattr(e, "hint", ""),
+        })
+    except Exception as e:
+        return templates.TemplateResponse(request, "partials/error.html", {
+            "error": f"Unexpected error: {e}",
+            "hint": "The document may not be a valid EDI X12 file.",
+        })
+
+    # Run structural + field-level validation
+    result = validate_856(envelope)
+
+    # Determine retailer for layer 3
+    detected = envelope.retailer
+    if retailer != "auto":
+        try:
+            detected = Retailer(retailer)
+        except ValueError:
+            pass
+
+    # Run retailer-specific validation if available
+    validator = _RETAILER_VALIDATORS.get(detected)
+    if validator:
+        result = validator(result)
+
+    retailer_label = _RETAILER_LABELS.get(detected, detected.value.title())
+
+    finding_counts = {
+        "total": len(result.findings),
+        "structural": len(result.structural_findings),
+        "field": len(result.field_findings),
+        "retailer": len(result.retailer_findings),
+    }
+
+    return templates.TemplateResponse(
+        request, "partials/validation_results.html", {
+            "result": result,
+            "retailer_label": retailer_label,
+            "finding_counts": finding_counts,
+            "edi_content": content,
+            "retailer_value": detected.value,
+        }
+    )
+
+
+@app.post("/export/validation-pdf")
+async def export_validation_pdf_endpoint(
+    edi_text: str = Form(""),
+    retailer: str = Form("auto"),
+):
+    tokens = tokenize(edi_text)
+    envelope = parse_envelope(tokens)
+    result = validate_856(envelope)
+
+    detected = envelope.retailer
+    if retailer != "auto":
+        try:
+            detected = Retailer(retailer)
+        except ValueError:
+            pass
+
+    validator = _RETAILER_VALIDATORS.get(detected)
+    if validator:
+        result = validator(result)
+
+    retailer_label = _RETAILER_LABELS.get(detected, detected.value.title())
+    pdf_bytes = export_validation_pdf(result, retailer_label)
+
+    shipment_id = result.bsn_data.get("shipment_id", "")
+    filename = f"856_validation_{shipment_id}.pdf" if shipment_id else "856_validation.pdf"
 
     return Response(
         content=pdf_bytes,

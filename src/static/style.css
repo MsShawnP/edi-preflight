@@ -329,6 +329,233 @@ button[type="submit"]:hover { background: #3d6a88; }
     padding: 0.75rem 1rem;
 }
 
+/* Mode tabs */
+
+.mode-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.mode-tab {
+    background: none;
+    border: none;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.mode-tab:hover { color: #555; }
+
+.mode-tab.active {
+    color: #4a7c9e;
+    border-bottom-color: #4a7c9e;
+}
+
+.mode-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0 0 1.25rem;
+}
+
+.input-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.input-group-retailer { max-width: 220px; }
+
+.input-group-retailer select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: #fff;
+}
+
+.input-group-retailer select:focus {
+    outline: none;
+    border-color: #4a7c9e;
+    box-shadow: 0 0 0 2px rgba(74, 124, 158, 0.15);
+}
+
+/* Validation results */
+
+.validation-header {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.validation-summary {
+    margin-bottom: 2rem;
+}
+
+.summary-counts {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.summary-stat {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 0.75rem 1.25rem;
+    text-align: center;
+    min-width: 100px;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.stat-pass { color: #27ae60; }
+.stat-fail { color: #c0392b; }
+.stat-fee { color: #e67e22; }
+
+.stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.15rem;
+}
+
+/* Findings */
+
+.layer-description {
+    color: #888;
+    font-size: 0.82rem;
+    margin: -0.5rem 0 0.75rem;
+}
+
+.findings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.finding {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-left: 4px solid #ccc;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+}
+
+.finding-blocks-transmission { border-left-color: #c0392b; }
+.finding-will-cause-chargeback { border-left-color: #e67e22; }
+.finding-may-cause-chargeback { border-left-color: #f1c40f; }
+.finding-cosmetic { border-left-color: #95a5a6; }
+
+.finding-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.35rem;
+}
+
+.finding-segment {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.8rem;
+    color: #555;
+    background: #f5f5f5;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+}
+
+.finding-fee {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e67e22;
+    margin-left: auto;
+}
+
+.finding-message {
+    margin: 0;
+    font-size: 0.87rem;
+    color: #333;
+}
+
+.finding-location {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+/* Severity badges */
+
+.badge-pass {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-severity-blocks-transmission {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge-severity-will-cause-chargeback {
+    background: #ffeeba;
+    color: #856404;
+}
+
+.badge-severity-may-cause-chargeback {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-severity-cosmetic {
+    background: #e2e6ea;
+    color: #555;
+}
+
+.badge-sm {
+    font-size: 0.65rem;
+    padding: 0.05rem 0.3rem;
+}
+
+/* Validation pass */
+
+.validation-pass-message {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 6px;
+    padding: 1.25rem;
+}
+
+.validation-pass-message p {
+    margin: 0;
+    color: #155724;
+    font-size: 0.9rem;
+}
+
+/* Chargeback summary */
+
+.chargeback-summary { margin-top: 2rem; }
+
+.data-table tfoot td {
+    padding: 0.6rem 0.75rem;
+    border-top: 2px solid #ddd;
+    background: #f5f5f5;
+}
+
 /* Error panel */
 
 .error-panel {

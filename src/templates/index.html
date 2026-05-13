@@ -1,23 +1,71 @@
 {% extends "base.html" %}
 
-{% block title %}EDI Pre-flight — 850 Purchase Order Parser{% endblock %}
+{% block title %}EDI Pre-flight{% endblock %}
 
 {% block content %}
-<form hx-post="/parse" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading" enctype="multipart/form-data">
-    <div class="input-group">
-        <label for="edi_text">Paste EDI document</label>
-        <textarea id="edi_text" name="edi_text" rows="12"
-                  placeholder="Paste your 850 Purchase Order here..."></textarea>
-    </div>
-    <div class="input-divider">or</div>
-    <div class="input-group">
-        <label for="file">Upload EDI file</label>
-        <input type="file" id="file" name="file" accept=".edi,.txt,.x12">
-    </div>
-    <div class="form-actions">
-        <button type="submit">Parse Document</button>
-        <span id="loading" class="htmx-indicator">Parsing...</span>
-    </div>
-</form>
+<div class="mode-tabs">
+    <button class="mode-tab active" data-mode="inbound" onclick="switchMode('inbound')">Inbound 850 Parser</button>
+    <button class="mode-tab" data-mode="outbound" onclick="switchMode('outbound')">Outbound 856 Validator</button>
+</div>
+
+<div id="mode-inbound" class="mode-panel">
+    <p class="mode-description">Paste or upload an inbound 850 Purchase Order to extract structured line items, allowances, and addresses.</p>
+    <form hx-post="/parse" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading-inbound" enctype="multipart/form-data">
+        <div class="input-group">
+            <label for="edi_text_850">Paste EDI document</label>
+            <textarea id="edi_text_850" name="edi_text" rows="12"
+                      placeholder="Paste your 850 Purchase Order here..."></textarea>
+        </div>
+        <div class="input-divider">or</div>
+        <div class="input-group">
+            <label for="file_850">Upload EDI file</label>
+            <input type="file" id="file_850" name="file" accept=".edi,.txt,.x12">
+        </div>
+        <div class="form-actions">
+            <button type="submit">Parse Document</button>
+            <span id="loading-inbound" class="htmx-indicator">Parsing...</span>
+        </div>
+    </form>
+</div>
+
+<div id="mode-outbound" class="mode-panel" style="display: none;">
+    <p class="mode-description">Paste or upload an outbound 856 ASN to validate against retailer-specific rules. Findings include severity tags and chargeback-dollar estimates.</p>
+    <form hx-post="/validate" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading-outbound" enctype="multipart/form-data">
+        <div class="input-row">
+            <div class="input-group input-group-retailer">
+                <label for="retailer">Retailer</label>
+                <select id="retailer" name="retailer">
+                    <option value="auto">Auto-detect</option>
+                    <option value="walmart">Walmart</option>
+                </select>
+            </div>
+        </div>
+        <div class="input-group">
+            <label for="edi_text_856">Paste EDI document</label>
+            <textarea id="edi_text_856" name="edi_text" rows="12"
+                      placeholder="Paste your 856 ASN here..."></textarea>
+        </div>
+        <div class="input-divider">or</div>
+        <div class="input-group">
+            <label for="file_856">Upload EDI file</label>
+            <input type="file" id="file_856" name="file" accept=".edi,.txt,.x12">
+        </div>
+        <div class="form-actions">
+            <button type="submit">Validate Document</button>
+            <span id="loading-outbound" class="htmx-indicator">Validating...</span>
+        </div>
+    </form>
+</div>
+
 <div id="results"></div>
+
+<script>
+function switchMode(mode) {
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+    document.getElementById('mode-inbound').style.display = mode === 'inbound' ? 'block' : 'none';
+    document.getElementById('mode-outbound').style.display = mode === 'outbound' ? 'block' : 'none';
+    document.getElementById('results').innerHTML = '';
+}
+</script>
 {% endblock %}
