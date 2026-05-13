@@ -121,6 +121,31 @@ button[type="submit"]:hover { background: #3d6a88; }
     display: inline;
 }
 
+/* Export bar */
+
+.export-bar {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
+.btn-export {
+    background: #fff;
+    color: #4a7c9e;
+    border: 1px solid #4a7c9e;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-export:hover {
+    background: #4a7c9e;
+    color: #fff;
+}
+
 /* Results */
 
 .results { margin-top: 2rem; }

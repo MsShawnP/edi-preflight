@@ -1,4 +1,15 @@
 <div class="results">
+    <div class="export-bar">
+        <form action="/export/csv" method="post">
+            <input type="hidden" name="edi_text" value="{{ edi_content }}">
+            <button type="submit" class="btn-export">Download CSV</button>
+        </form>
+        <form action="/export/pdf" method="post">
+            <input type="hidden" name="edi_text" value="{{ edi_content }}">
+            <button type="submit" class="btn-export">Download PDF</button>
+        </form>
+    </div>
+
     <section class="po-header">
         <div class="header-top">
             <span class="retailer-badge">{{ po.retailer.value | title }}</span>
