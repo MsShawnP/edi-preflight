@@ -69,7 +69,7 @@ First vertical slice — raw EDI text to structured output in a browser.
       3 synthetic samples in repo: basic PO, PO with SAC allowances,
       PO with catch-weight items.
 
-- [ ] 1.4: 850 extraction module — Walmart
+- [x] 1.4: 850 extraction module — Walmart
     - Depends on: 1.1, 1.2, 1.3
     - Done when: Given a Walmart 850, extracts PO header, line items
       (PO1), allowances (SAC), ship-to (N1/N3/N4) as structured data.

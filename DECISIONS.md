@@ -19,12 +19,15 @@ Each entry:
 
 ## Architecture & Pipeline
 
-[First arch decision goes here. Example structure:]
+### 2026-05-12 — Build a custom X12 parser instead of using pyx12 or bots-edi
+- **Why:** Stronger portfolio signal ("we built the parser" vs "we wrapped a library"). No dependency risk from unmaintained libraries. Full control over how retailer quirks are handled — the parser only needs to handle 850 and 856, not all X12 transaction sets. pyx12 is mature but old; bots-edi is more active but small community.
+- **Scope:** global — affects all parsing, extraction, and validation code
+- **Do not:** Pull in pyx12, bots-edi, or any other EDI parsing library
 
-### YYYY-MM-DD — [Decision in one line]
-- **Why:** [reasoning, including alternatives considered]
-- **Scope:** [global / file / deliverable / etc.]
-- **Do not:** [anti-instruction, if applicable]
+### 2026-05-12 — Retailer detection uses pattern matching on ISA/GS identifiers
+- **Why:** Retailer ISA/GS IDs are trading-partner-specific and not universally published. Exact ID configuration would require each user to know their trading partner's ISA06 value. Pattern matching on name substrings (WALMART, AMAZON, AMZN, WMT, etc.) plus known DUNS IDs covers the common cases for a lead-gen tool. Falls back to "Unknown" with manual retailer selection as escape hatch.
+- **Scope:** src/envelope.py — retailer detection logic
+- **Do not:** Require users to configure exact retailer IDs before using the tool
 
 ---
 
