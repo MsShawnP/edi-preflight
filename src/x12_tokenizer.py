@@ -60,6 +60,22 @@ class TokenizeError(Exception):
         super().__init__(message)
 
 
+def _detect_input_format(raw: str) -> str:
+    """Return a format-specific hint when the input is clearly not EDI."""
+    stripped = raw.strip()
+    if stripped.startswith("{") or stripped.startswith("["):
+        return ("This looks like JSON, not EDI. EDI X12 documents start with "
+                "an ISA segment (e.g., ISA*00*...).")
+    if stripped.startswith("<?xml") or stripped.startswith("<"):
+        return ("This looks like XML, not EDI. EDI X12 documents start with "
+                "an ISA segment (e.g., ISA*00*...).")
+    if "," in stripped.split("\n")[0] and stripped.count(",") > stripped.count("*"):
+        return ("This looks like CSV or tabular data, not EDI. EDI X12 "
+                "documents start with an ISA segment (e.g., ISA*00*...).")
+    return ("EDI X12 documents start with an ISA segment. Check that you "
+            "pasted the complete document.")
+
+
 def detect_delimiters(raw: str) -> Delimiters:
     """Detect delimiters from the ISA segment.
 
@@ -71,10 +87,10 @@ def detect_delimiters(raw: str) -> Delimiters:
     """
     isa_pos = raw.find("ISA")
     if isa_pos == -1:
+        hint = _detect_input_format(raw)
         raise TokenizeError(
             "No ISA segment found — this doesn't look like an EDI X12 document.",
-            hint="EDI documents start with an ISA segment. Check that you pasted "
-            "the complete document.",
+            hint=hint,
         )
 
     text_from_isa = raw[isa_pos:]

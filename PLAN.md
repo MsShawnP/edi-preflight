@@ -82,7 +82,7 @@ First vertical slice — raw EDI text to structured output in a browser.
       see structured table with header summary, line items, allowances,
       and retailer badge. Both paste and file upload work.
 
-- [ ] 1.6: CSV + PDF export for 850
+- [x] 1.6: CSV + PDF export for 850
     - Depends on: 1.5
     - Done when: Download buttons on results page produce correct CSV
       (importable into Excel/ERP) and formatted PDF with header + line
@@ -94,25 +94,25 @@ Tasks 2.1–2.4 are independent of each other and can be parallelized.
 Each involves spec research (user-bottlenecked) + extraction quirks +
 samples.
 
-- [ ] 2.1: Amazon 850 — spec research + extraction + samples
+- [x] 2.1: Amazon 850 — spec research + extraction + samples
     - Depends on: 1.4
     - Done when: Amazon 850 quirks documented in YAML. At least 2
       synthetic samples. Extraction handles Amazon-specific fields.
       Tests pass.
 
-- [ ] 2.2: UNFI 850 — spec research + extraction + samples
+- [x] 2.2: UNFI 850 — spec research + extraction + samples
     - Depends on: 1.4
     - Done when: Same verification as 2.1, for UNFI.
 
-- [ ] 2.3: KeHE 850 — spec research + extraction + samples
+- [x] 2.3: KeHE 850 — spec research + extraction + samples
     - Depends on: 1.4
     - Done when: Same verification as 2.1, for KeHE.
 
-- [ ] 2.4: Costco 850 — spec research + extraction + samples
+- [x] 2.4: Costco 850 — spec research + extraction + samples
     - Depends on: 1.4
     - Done when: Same verification as 2.1, for Costco.
 
-- [ ] 2.5: 850 integration — all five retailers in web UI
+- [x] 2.5: 850 integration — all five retailers in web UI
     - Depends on: 1.5, 2.1–2.4
     - Done when: Web UI auto-detects retailer from document headers.
       All five retailers parse correctly with retailer-specific
@@ -122,26 +122,26 @@ samples.
 
 Second vertical slice — outbound validation mode in the browser.
 
-- [ ] 3.1: Walmart 856 spec research + synthetic samples
+- [x] 3.1: Walmart 856 spec research + synthetic samples
     - Depends on: none (research task — user-bottlenecked)
     - Done when: Walmart 856 spec in YAML. Chargeback fee schedule
       documented. At least 5 samples: 1 clean, 4 with errors (wrong HL
       loop order, missing MEA for catch-weight, bad DTM format, missing
       required segment).
 
-- [ ] 3.2: 856 structural validation
+- [x] 3.2: 856 structural validation
     - Depends on: 1.1, 1.2
     - Done when: Validates envelope completeness, segment ordering,
       control number matching. Catches missing GS, ST/SE mismatch,
       bad terminators. Tests pass.
 
-- [ ] 3.3: 856 field-level validation
+- [x] 3.3: 856 field-level validation
     - Depends on: 3.2
     - Done when: Validates required fields present and correctly
       formatted (dates in CCYYMMDD, valid qualifier codes, numeric
       ranges). Tests pass against samples with field-level errors.
 
-- [ ] 3.4: Walmart 856 retailer-specific rules + severity tagging
+- [x] 3.4: Walmart 856 retailer-specific rules + severity tagging
     - Depends on: 3.1, 3.3
     - Done when: HL loop ordering (S→O→I→P) validated. Catch-weight
       MEA*WT checked. ASN timing checked. Each finding tagged with
@@ -149,13 +149,13 @@ Second vertical slice — outbound validation mode in the browser.
       may-cause-chargeback / cosmetic) and dollar estimate from fee
       schedule. Tests pass against all Walmart 856 samples.
 
-- [ ] 3.5: Web UI — 856 outbound mode + validation report
+- [x] 3.5: Web UI — 856 outbound mode + validation report
     - Depends on: 3.4, 1.5
     - Done when: Second mode on landing page. Paste/upload 856, select
       retailer, see three-layer report (structural / field-level /
       retailer-spec) with severity badges and dollar estimates.
 
-- [ ] 3.6: PDF export for 856 validation report
+- [x] 3.6: PDF export for 856 validation report
     - Depends on: 3.5
     - Done when: Download button produces formatted PDF of the
       three-layer validation report with severity tags and dollar
@@ -166,32 +166,32 @@ Second vertical slice — outbound validation mode in the browser.
 Tasks 4.1–4.4 are independent and parallelizable. Each involves spec
 research (user-bottlenecked) + retailer-specific rules + samples.
 
-- [ ] 4.1: Amazon 856 — spec research + rules + samples
+- [x] 4.1: Amazon 856 — spec research + rules + samples
     - Depends on: 3.3
     - Done when: Amazon 856 rules in YAML with chargeback fees. Samples
       with errors. Validator catches Amazon-specific violations. Tests
       pass.
 
-- [ ] 4.2: UNFI 856 — spec research + rules + samples
+- [x] 4.2: UNFI 856 — spec research + rules + samples
     - Depends on: 3.3
     - Done when: Same verification as 4.1, for UNFI.
 
-- [ ] 4.3: KeHE 856 — spec research + rules + samples
+- [x] 4.3: KeHE 856 — spec research + rules + samples
     - Depends on: 3.3
     - Done when: Same verification as 4.1, for KeHE.
 
-- [ ] 4.4: Costco 856 — spec research + rules + samples
+- [x] 4.4: Costco 856 — spec research + rules + samples
     - Depends on: 3.3
     - Done when: Same verification as 4.1, for Costco.
 
-- [ ] 4.5: 856 integration — all five retailers in web UI
+- [x] 4.5: 856 integration — all five retailers in web UI
     - Depends on: 3.5, 4.1–4.4
     - Done when: Retailer selector works for all five. Correct rule set
       applied per retailer. Tests pass against all 856 samples.
 
 ### Milestone 5: Error Handling + Input Validation
 
-- [ ] 5.1: Input validation and diagnostic messages
+- [x] 5.1: Input validation and diagnostic messages
     - Depends on: 2.5, 4.5
     - Done when: Non-EDI input (CSV, JSON, plain text) returns helpful
       "this doesn't look like EDI" message. Truncated documents
@@ -201,18 +201,18 @@ research (user-bottlenecked) + retailer-specific rules + samples.
 
 ### Milestone 6: Deploy + Finalize
 
-- [ ] 6.1: Dockerfile + fly.toml + deploy to Fly.io
+- [x] 6.1: Dockerfile + fly.toml + deploy to Fly.io
     - Depends on: 5.1
     - Done when: Tool accessible at edi-preflight.fly.dev. Both modes
       functional. "We don't store your documents" notice visible on UI.
 
-- [ ] 6.2: Retailer spec rule library finalized
+- [x] 6.2: Retailer spec rule library finalized
     - Depends on: 4.5
     - Done when: All five retailers' 850 + 856 rules in clean YAML in
       `rules/` directory. README documents the rule format and what
       each file covers.
 
-- [ ] 6.3: Sample EDI documents curated for repo
+- [x] 6.3: Sample EDI documents curated for repo
     - Depends on: 2.5, 4.5
     - Done when: 20+ sample documents in `samples/` covering all five
       retailers, both document types, common patterns and failure

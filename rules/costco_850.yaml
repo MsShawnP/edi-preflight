@@ -1,0 +1,98 @@
+# Costco 850 Purchase Order — Spec Reference (Version 5010)
+# Costco Wholesale Corporation.
+# Used by the 850 extraction module.
+
+retailer: costco
+document_type: "850"
+version: "005010"
+
+# --- Identification ---
+# Costco ISA sender IDs contain "COSTCO" or use phone-style ID "4253138601CH".
+# ISA qualifier may be 01 (DUNS) or ZZ.
+
+isa_identifiers:
+  sender_patterns: ["COSTCO"]
+  known_ids: ["4253138601CH"]
+
+# --- Segment ordering ---
+
+header_segments:
+  - segment: BEG
+    required: true
+    elements:
+      BEG01: { name: purpose_code, values: ["00"] }
+      BEG02: { name: po_type, values: ["NE", "SA"], description: "NE=New order" }
+      BEG03: { name: po_number, description: "Costco PO number (numeric)" }
+      BEG05: { name: date, format: CCYYMMDD }
+
+  - segment: REF
+    required: false
+    qualifiers:
+      DP: department_number
+      VR: vendor_reference
+      IA: internal_vendor_number
+
+  - segment: DTM
+    required: false
+    qualifiers:
+      "002": requested_delivery_date
+      "010": requested_ship_date
+      "037": ship_not_before
+
+  - segment: SAC
+    required: false
+    level: header
+    description: Costco uses for volume rebates and freight allowances
+
+  - segment: ITD
+    required: false
+
+  - segment: TD5
+    required: false
+    description: Carrier/routing — Costco often specifies collect freight
+
+n1_loop:
+  entity_codes:
+    ST: { name: ship_to, required: true, description: "Costco depot or warehouse" }
+    BT: { name: bill_to, required: false }
+    VN: { name: vendor, required: false }
+
+po1_loop:
+  segment: PO1
+  required: true
+  product_id_pairs:
+    IN: buyers_item_number  # Costco item number (6-7 digit)
+    UP: gtin_12_upc
+    VN: vendor_item_number
+    UK: gtin_14
+  notes: >
+    Costco item numbers are 6-7 digits. The Costco item number is the primary
+    identifier and is always present as buyer's item number (IN).
+
+  child_segments:
+    - segment: PID
+    - segment: PO4
+    - segment: SAC
+    - segment: MEA
+
+summary_segments:
+  - segment: CTT
+  - segment: AMT
+
+# --- Costco departments (food-relevant) ---
+
+departments:
+  "10": Fresh Foods
+  "11": Sundries
+  "12": Cooler (Refrigerated)
+  "14": Frozen
+  "16": Deli
+  "17": Bakery
+  "27": Candy
+
+notes:
+  - Costco PO numbers are typically 8-10 digit numeric
+  - Costco ships to depots/depots, not individual warehouses for most vendors
+  - Pallet-level quantities common — large order volumes
+  - Costco may use TD5 for carrier routing instructions
+  - Item numbers are 6-7 digits, always in IN qualifier

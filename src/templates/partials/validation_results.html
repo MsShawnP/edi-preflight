@@ -1,0 +1,171 @@
+<div class="results validation-results">
+    <div class="export-bar">
+        <form action="/export/validation-pdf" method="post">
+            <input type="hidden" name="edi_text" value="{{ edi_content }}">
+            <input type="hidden" name="retailer" value="{{ retailer_value }}">
+            <button type="submit" class="btn-export">Download PDF Report</button>
+        </form>
+    </div>
+
+    <div class="validation-header">
+        <div class="header-top">
+            <span class="retailer-badge">{{ retailer_label }}</span>
+            <h2>856 ASN Validation</h2>
+            {% if result.is_valid %}
+            <span class="badge badge-pass">PASS</span>
+            {% else %}
+            <span class="badge badge-severity-{{ result.worst_severity.value }}">{{ result.worst_severity.label }}</span>
+            {% endif %}
+        </div>
+        {% if result.bsn_data %}
+        <dl class="po-meta">
+            {% if result.bsn_data.shipment_id %}
+            <div>
+                <dt>Shipment</dt>
+                <dd>{{ result.bsn_data.shipment_id }}</dd>
+            </div>
+            {% endif %}
+            {% if result.bsn_data.date %}
+            <div>
+                <dt>Ship Date</dt>
+                <dd>{{ result.bsn_data.date | edi_date }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+        {% endif %}
+    </div>
+
+    <div class="validation-summary">
+        <div class="summary-counts">
+            <div class="summary-stat">
+                <span class="stat-number {% if finding_counts.total == 0 %}stat-pass{% else %}stat-fail{% endif %}">{{ finding_counts.total }}</span>
+                <span class="stat-label">Findings</span>
+            </div>
+            {% if finding_counts.structural %}
+            <div class="summary-stat">
+                <span class="stat-number">{{ finding_counts.structural }}</span>
+                <span class="stat-label">Structural</span>
+            </div>
+            {% endif %}
+            {% if finding_counts.field %}
+            <div class="summary-stat">
+                <span class="stat-number">{{ finding_counts.field }}</span>
+                <span class="stat-label">Field-Level</span>
+            </div>
+            {% endif %}
+            {% if finding_counts.retailer %}
+            <div class="summary-stat">
+                <span class="stat-number">{{ finding_counts.retailer }}</span>
+                <span class="stat-label">Retailer-Specific</span>
+            </div>
+            {% endif %}
+            {% if result.total_fees > 0 %}
+            <div class="summary-stat">
+                <span class="stat-number stat-fee">{{ result.total_fees | currency }}</span>
+                <span class="stat-label">Est. Chargebacks</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if result.is_valid %}
+    <section class="validation-pass-message">
+        <p>This document passed all structural, field-level, and retailer-specific checks. No issues found.</p>
+    </section>
+    {% else %}
+    {% set sorted = result.sorted_findings() %}
+
+    {% if result.structural_findings %}
+    <section>
+        <h3>Layer 1: Structural</h3>
+        <p class="layer-description">Envelope completeness, segment ordering, control number matching.</p>
+        <div class="findings-list">
+            {% for f in sorted if f.layer == 'structural' %}
+            <div class="finding finding-{{ f.severity.value }}">
+                <div class="finding-header">
+                    <span class="badge badge-severity-{{ f.severity.value }}">{{ f.severity.label }}</span>
+                    {% if f.segment_id %}<span class="finding-segment">{{ f.segment_id }}{% if f.element_id %} &rsaquo; {{ f.element_id }}{% endif %}</span>{% endif %}
+                    {% if f.has_fee %}<span class="finding-fee">{{ f.fee | currency }}/{{ f.fee_per }}</span>{% endif %}
+                </div>
+                <p class="finding-message">{{ f.message }}</p>
+                {% if f.location %}<p class="finding-location">{{ f.location }}</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if result.field_findings %}
+    <section>
+        <h3>Layer 2: Field-Level</h3>
+        <p class="layer-description">Required fields, date formats, qualifier codes, numeric validation.</p>
+        <div class="findings-list">
+            {% for f in sorted if f.layer == 'field' %}
+            <div class="finding finding-{{ f.severity.value }}">
+                <div class="finding-header">
+                    <span class="badge badge-severity-{{ f.severity.value }}">{{ f.severity.label }}</span>
+                    {% if f.segment_id %}<span class="finding-segment">{{ f.segment_id }}{% if f.element_id %} &rsaquo; {{ f.element_id }}{% endif %}</span>{% endif %}
+                    {% if f.has_fee %}<span class="finding-fee">{{ f.fee | currency }}/{{ f.fee_per }}</span>{% endif %}
+                </div>
+                <p class="finding-message">{{ f.message }}</p>
+                {% if f.location %}<p class="finding-location">{{ f.location }}</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if result.retailer_findings %}
+    <section>
+        <h3>Layer 3: {{ retailer_label }}-Specific</h3>
+        <p class="layer-description">Retailer compliance rules, OTIF requirements, and chargeback triggers.</p>
+        <div class="findings-list">
+            {% for f in sorted if f.layer == 'retailer' %}
+            <div class="finding finding-{{ f.severity.value }}">
+                <div class="finding-header">
+                    <span class="badge badge-severity-{{ f.severity.value }}">{{ f.severity.label }}</span>
+                    {% if f.segment_id %}<span class="finding-segment">{{ f.segment_id }}{% if f.element_id %} &rsaquo; {{ f.element_id }}{% endif %}</span>{% endif %}
+                    {% if f.has_fee %}<span class="finding-fee">{{ f.fee | currency }}/{{ f.fee_per }}</span>{% endif %}
+                </div>
+                <p class="finding-message">{{ f.message }}</p>
+                {% if f.location %}<p class="finding-location">{{ f.location }}</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if result.total_fees > 0 %}
+    <section class="chargeback-summary">
+        <h3>Chargeback Estimate</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Rule</th>
+                    <th>Severity</th>
+                    <th class="num">Fee</th>
+                    <th>Per</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in sorted if f.has_fee %}
+                <tr>
+                    <td>{{ f.message | truncate(80) }}</td>
+                    <td><span class="badge badge-sm badge-severity-{{ f.severity.value }}">{{ f.severity.label }}</span></td>
+                    <td class="num">{{ f.fee | currency }}</td>
+                    <td>{{ f.fee_per }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2"><strong>Total Estimated Chargebacks</strong></td>
+                    <td class="num"><strong>{{ result.total_fees | currency }}</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </section>
+    {% endif %}
+    {% endif %}
+</div>

@@ -1,0 +1,225 @@
+# Walmart 856 ASN (Advance Ship Notice) — Spec Reference (Version 5010)
+# Used by the 856 validation module to check structural, field-level,
+# and retailer-specific rules. Includes chargeback fee schedule.
+
+retailer: walmart
+document_type: "856"
+version: "005010"
+
+# --- Envelope requirements ---
+
+envelope:
+  gs_functional_id: SH
+  st_transaction_type: "856"
+
+# --- BSN (Beginning Segment for Ship Notice) ---
+
+bsn:
+  required: true
+  elements:
+    BSN01: { name: purpose_code, required: true, values: ["00", "01", "05"], description: "00=Original, 01=Cancellation, 05=Replace" }
+    BSN02: { name: shipment_id, required: true, description: "Unique shipment identification number" }
+    BSN03: { name: date, required: true, format: CCYYMMDD, description: "Ship date" }
+    BSN04: { name: time, required: true, format: HHMM, description: "Ship time" }
+
+# --- HL (Hierarchical Level) loop structure ---
+# Walmart requires strict S→O→I→P hierarchy.
+
+hl_loop:
+  required: true
+  description: Hierarchical structure for ASN content
+  levels:
+    S:
+      name: shipment
+      code: "S"
+      required: true
+      min_count: 1
+      max_count: 1
+      parent: null
+      description: Top-level shipment — one per ASN
+      child_segments:
+        - segment: TD1
+          required: false
+          description: Carrier details — number of packages/lading quantity
+        - segment: TD5
+          required: true
+          description: Carrier routing — SCAC code, transport method
+          elements:
+            TD501: { name: routing_qualifier, values: ["B", "O"] }
+            TD502: { name: routing_id, description: "Carrier identification (SCAC)" }
+            TD503: { name: transport_method, values: ["M", "R", "S", "A", "LT"], description: "M=Motor, R=Rail, S=Ocean, A=Air, LT=LTL" }
+        - segment: TD3
+          required: false
+          description: Equipment details (trailer number)
+        - segment: REF
+          required: false
+          description: Reference numbers (BOL, PRO, etc.)
+          qualifiers:
+            BM: bill_of_lading_number
+            CN: carrier_pro_number
+        - segment: DTM
+          required: true
+          description: Ship date
+          qualifiers:
+            "011": shipped_date
+            "017": estimated_delivery_date
+        - segment: N1
+          required: true
+          description: Ship-from and ship-to parties
+          entity_codes:
+            SF: { name: ship_from, required: true }
+            ST: { name: ship_to, required: true }
+
+    O:
+      name: order
+      code: "O"
+      required: true
+      min_count: 1
+      parent: S
+      description: PO reference — one per purchase order in the shipment
+      child_segments:
+        - segment: PRF
+          required: true
+          description: Purchase order reference
+          elements:
+            PRF01: { name: po_number, required: true }
+
+    I:
+      name: tare
+      code: "I"
+      required: true
+      min_count: 1
+      parent: O
+      description: Tare level — pallet or case (shipping container)
+      child_segments:
+        - segment: MAN
+          required: true
+          description: Marks and numbers — SSCC-18 barcode
+          elements:
+            MAN01: { name: qualifier, required: true, values: ["GM", "CP"], description: "GM=SSCC-18" }
+            MAN02: { name: number, required: true, description: "SSCC-18 barcode (18 digits)" }
+
+    P:
+      name: pack
+      code: "P"
+      required: false
+      parent: I
+      description: Pack level — item detail within a container
+      child_segments:
+        - segment: SN1
+          required: true
+          description: Item detail — shipped quantity
+          elements:
+            SN101: { name: line_number }
+            SN102: { name: quantity_shipped, required: true, format: numeric }
+            SN103: { name: unit_of_measure, required: true }
+        - segment: LIN
+          required: false
+          description: Item identification
+          product_id_qualifiers: ["IN", "UP", "VN", "UK"]
+        - segment: PID
+          required: false
+          description: Product description
+        - segment: MEA
+          required: false  # required only for catch-weight items
+          description: Catch-weight measurement
+          elements:
+            MEA01: { name: qualifier, values: ["WT"] }
+            MEA02: { name: unit, values: ["LB", "KG", "OZ"] }
+            MEA03: { name: value, format: decimal }
+
+# --- Chargeback fee schedule (Walmart OTIF / compliance) ---
+
+chargebacks:
+  missing_asn:
+    fee: 500.00
+    per: load
+    severity: blocks-transmission
+    description: No ASN received before delivery
+
+  late_asn:
+    fee: 500.00
+    per: load
+    severity: will-cause-chargeback
+    description: ASN received after shipment arrival
+
+  missing_sscc18:
+    fee: 100.00
+    per: case
+    severity: will-cause-chargeback
+    description: Missing or invalid SSCC-18 barcode on tare level
+
+  invalid_sscc18_format:
+    fee: 100.00
+    per: case
+    severity: will-cause-chargeback
+    description: SSCC-18 not 18 digits or invalid check digit
+
+  wrong_hl_hierarchy:
+    fee: 0.00
+    per: document
+    severity: blocks-transmission
+    description: HL loop levels not in S→O→I→P order
+
+  missing_catch_weight:
+    fee: 100.00
+    per: item
+    severity: will-cause-chargeback
+    description: Catch-weight item shipped without MEA*WT segment
+
+  missing_po_reference:
+    fee: 0.00
+    per: order
+    severity: blocks-transmission
+    description: Order-level HL without PRF segment (no PO number)
+
+  missing_ship_to:
+    fee: 0.00
+    per: document
+    severity: blocks-transmission
+    description: No ship-to (N1*ST) at shipment level
+
+  missing_ship_date:
+    fee: 0.00
+    per: document
+    severity: blocks-transmission
+    description: No DTM*011 ship date at shipment level
+
+  invalid_date_format:
+    fee: 0.00
+    per: occurrence
+    severity: may-cause-chargeback
+    description: Date not in CCYYMMDD format
+
+  missing_carrier:
+    fee: 0.00
+    per: document
+    severity: may-cause-chargeback
+    description: No TD5 carrier routing at shipment level
+
+# --- Severity levels ---
+
+severity_levels:
+  blocks-transmission:
+    order: 1
+    label: Blocks Transmission
+    description: Document will be rejected by trading partner
+    color: "#c0392b"
+
+  will-cause-chargeback:
+    order: 2
+    label: Will Cause Chargeback
+    description: Document will be accepted but will trigger a chargeback
+    color: "#e67e22"
+
+  may-cause-chargeback:
+    order: 3
+    label: May Cause Chargeback
+    description: Potential chargeback depending on retailer review
+    color: "#f1c40f"
+
+  cosmetic:
+    order: 4
+    label: Cosmetic
+    description: Not spec-compliant but unlikely to cause issues
+    color: "#95a5a6"

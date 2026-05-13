@@ -1,0 +1,120 @@
+# UNFI 850 Purchase Order — Spec Reference (Version 5010)
+# United Natural Foods Inc — largest natural/organic food distributor.
+# Used by the 850 extraction module.
+
+retailer: unfi
+document_type: "850"
+version: "005010"
+
+# --- Identification ---
+# UNFI ISA/GS sender IDs typically contain "UNFI".
+# Multiple DCs — each has its own ISA ID.
+
+isa_identifiers:
+  sender_patterns: ["UNFI"]
+  known_ids: []
+
+# --- Segment ordering ---
+
+header_segments:
+  - segment: BEG
+    required: true
+    description: Beginning segment for purchase order
+    elements:
+      BEG01: { name: purpose_code, values: ["00"], description: "00=Original" }
+      BEG02: { name: po_type, values: ["NE", "SA"], description: "NE=New order, SA=Stand-alone" }
+      BEG03: { name: po_number, description: "UNFI PO number (numeric, typically 8-10 digits)" }
+      BEG05: { name: date, format: CCYYMMDD }
+
+  - segment: REF
+    required: false
+    description: Reference information
+    qualifiers:
+      DP: department_number
+      VR: vendor_reference
+      ZZ: mutually_defined
+
+  - segment: DTM
+    required: false
+    max_uses: 10
+    description: Date/time references
+    qualifiers:
+      "002": requested_delivery_date
+      "010": requested_ship_date
+
+  - segment: SAC
+    required: false
+    level: header
+    description: Header-level allowances — UNFI uses for promo/ad allowances
+
+  - segment: ITD
+    required: false
+    description: Terms of sale
+
+n1_loop:
+  description: Party identification
+  entity_codes:
+    ST: { name: ship_to, required: true, description: "UNFI DC — distribution center" }
+    BT: { name: bill_to, required: false }
+    VN: { name: vendor, required: false }
+
+# --- Detail section ---
+
+po1_loop:
+  segment: PO1
+  required: true
+  description: Baseline item data
+  elements:
+    PO101: { name: line_number }
+    PO102: { name: quantity, format: numeric }
+    PO103: { name: unit_of_measure, common_values: ["CS", "EA", "PK"] }
+    PO104: { name: unit_price, format: decimal }
+    PO105: { name: price_basis, common_values: ["QE"] }
+  product_id_pairs:
+    IN: buyers_item_number  # UNFI item number
+    UP: gtin_12_upc
+    VN: vendor_item_number
+    UK: gtin_14
+    SK: sku
+  notes: >
+    UNFI uses their own item numbering system. The buyer's item number (IN)
+    is the UNFI catalog number. UPC is always present for branded products.
+
+  child_segments:
+    - segment: PID
+      required: false
+      description: Product description
+    - segment: PO4
+      required: false
+      description: Item physical details
+    - segment: SAC
+      required: false
+      level: line_item
+    - segment: MEA
+      required: false
+      description: Catch-weight measurements
+
+# --- Summary ---
+
+summary_segments:
+  - segment: CTT
+    required: false
+  - segment: AMT
+    required: false
+
+# --- UNFI department codes (natural/organic) ---
+
+departments:
+  grocery: Grocery / Shelf Stable
+  frozen: Frozen
+  refrigerated: Refrigerated / Dairy
+  produce: Produce
+  hbc: Health & Beauty Care
+  supplements: Vitamins & Supplements
+  bulk: Bulk Foods
+
+notes:
+  - UNFI PO numbers are typically numeric, 8-10 digits
+  - UNFI DCs named by region (e.g., UNFI DC PROVIDENCE, UNFI DC LANCASTER)
+  - Natural/organic products are common — no special EDI segment for certifications
+  - UNFI may send separate POs per temperature zone (ambient, refrigerated, frozen)

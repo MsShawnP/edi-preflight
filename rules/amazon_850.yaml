@@ -1,0 +1,134 @@
+# Amazon 850 Purchase Order — Spec Reference (Version 5010)
+# Amazon Vendor Central / Retail EDI. Used by the 850 extraction module
+# to identify Amazon-specific segments, qualifiers, and product IDs.
+
+retailer: amazon
+document_type: "850"
+version: "005010"
+
+# --- Identification ---
+# Amazon ISA/GS sender IDs typically contain "AMAZON" or "AMZN".
+# ISA qualifier is often ZZ (mutually defined) or 01 (DUNS).
+
+isa_identifiers:
+  sender_patterns: ["AMAZON", "AMZN"]
+  known_ids: []
+
+# --- Segment ordering (header → detail → summary) ---
+
+header_segments:
+  - segment: BEG
+    required: true
+    description: Beginning segment for purchase order
+    elements:
+      BEG01: { name: purpose_code, values: ["00", "05"], description: "00=Original, 05=Replace" }
+      BEG02: { name: po_type, values: ["NE", "DS", "SA"], description: "NE=New order (most common), DS=Dropship, SA=Stand-alone" }
+      BEG03: { name: po_number, description: "Amazon PO number (e.g. 2ABCD12345)" }
+      BEG05: { name: date, format: CCYYMMDD }
+
+  - segment: REF
+    required: false
+    description: Reference information
+    qualifiers:
+      DP: department_number
+      VR: vendor_reference
+      CO: customer_order_number
+      AH: agreement_number
+      ZZ: mutually_defined
+
+  - segment: DTM
+    required: false
+    max_uses: 10
+    description: Date/time references
+    qualifiers:
+      "002": requested_delivery_date
+      "010": requested_ship_date
+      "037": ship_not_before
+      "038": ship_not_after
+      "063": do_not_deliver_after
+      "064": early_ship_date
+
+  - segment: SAC
+    required: false
+    max_uses: 25
+    level: header
+    description: Header-level allowances and charges
+    notes: Amazon uses standard SAC structure for co-op, freight, damage allowances
+
+  - segment: ITD
+    required: false
+    description: Terms of sale/deferred payment
+
+  - segment: TD5
+    required: false
+    description: Carrier details — Amazon often specifies routing
+
+n1_loop:
+  description: Party identification
+  entity_codes:
+    ST: { name: ship_to, required: true, description: "Amazon FC (fulfillment center)" }
+    BT: { name: bill_to, required: false }
+    VN: { name: vendor, required: false }
+    SU: { name: supplier, required: false }
+
+# --- Detail section (PO1 loop) ---
+
+po1_loop:
+  segment: PO1
+  required: true
+  description: Baseline item data
+  elements:
+    PO101: { name: line_number }
+    PO102: { name: quantity, format: numeric }
+    PO103: { name: unit_of_measure, common_values: ["EA", "CS", "BX", "PK"] }
+    PO104: { name: unit_price, format: decimal }
+    PO105: { name: price_basis, common_values: ["PE", "QE"] }
+  product_id_pairs:
+    IN: buyers_item_number  # Amazon's internal item number (ASIN often in separate REF)
+    UP: gtin_12_upc
+    EN: gtin_13_ean
+    UK: gtin_14
+    VN: vendor_item_number
+    SK: sku
+    BP: buyers_part_number
+  notes: >
+    Amazon's ASIN is typically passed as the buyer's item number (IN qualifier)
+    or in a REF segment. The primary product identifier for Amazon is usually
+    the UPC/EAN alongside the Amazon item number.
+
+  child_segments:
+    - segment: PID
+      required: false
+      description: Product description
+
+    - segment: PO4
+      required: false
+      description: Item physical details (inner pack)
+
+    - segment: SAC
+      required: false
+      level: line_item
+      description: Line-item level allowances
+
+    - segment: MEA
+      required: false
+      description: Measurements (catch-weight)
+
+# --- Summary section ---
+
+summary_segments:
+  - segment: CTT
+    required: false
+    description: Transaction totals
+  - segment: AMT
+    required: false
+    description: Monetary amount summary
+
+# --- Amazon-specific notes ---
+
+notes:
+  - Amazon PO numbers often follow patterns like 2ABCD12345 or alphanumeric
+  - Amazon FCs use codes like BFI4, PHX6, MDW2 in the ship-to N1 name
+  - Amazon may send POs with large line item counts (50+ lines common)
+  - Window compliance is strict — DTM 037/063 define the must-arrive-by window
+  - Amazon uses "EA" (each) more often than "CS" (case) for unit of measure

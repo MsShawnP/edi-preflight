@@ -1,0 +1,76 @@
+# KeHE 850 Purchase Order — Spec Reference (Version 5010)
+# KeHE Distributors — specialty/natural food distributor.
+# Used by the 850 extraction module.
+
+retailer: kehe
+document_type: "850"
+version: "005010"
+
+# --- Identification ---
+# KeHE ISA/GS sender IDs contain "KEHE".
+# Known DUNS IDs: 0569813430000, 0054370330000.
+
+isa_identifiers:
+  sender_patterns: ["KEHE"]
+  known_duns: ["0569813430000", "0054370330000"]
+
+# --- Segment ordering ---
+
+header_segments:
+  - segment: BEG
+    required: true
+    elements:
+      BEG01: { name: purpose_code, values: ["00"] }
+      BEG02: { name: po_type, values: ["NE", "SA"] }
+      BEG03: { name: po_number, description: "KeHE PO number" }
+      BEG05: { name: date, format: CCYYMMDD }
+
+  - segment: REF
+    required: false
+    qualifiers:
+      DP: department_number
+      VR: vendor_reference
+
+  - segment: DTM
+    required: false
+    qualifiers:
+      "002": requested_delivery_date
+      "010": requested_ship_date
+
+  - segment: SAC
+    required: false
+    level: header
+
+  - segment: ITD
+    required: false
+
+n1_loop:
+  entity_codes:
+    ST: { name: ship_to, required: true, description: "KeHE DC" }
+    BT: { name: bill_to, required: false }
+    VN: { name: vendor, required: false }
+
+po1_loop:
+  segment: PO1
+  required: true
+  product_id_pairs:
+    IN: buyers_item_number  # KeHE item number
+    UP: gtin_12_upc
+    VN: vendor_item_number
+    UK: gtin_14
+
+  child_segments:
+    - segment: PID
+    - segment: PO4
+    - segment: SAC
+    - segment: MEA
+
+summary_segments:
+  - segment: CTT
+  - segment: AMT
+
+notes:
+  - KeHE DCs named by location (e.g., KEHE DC NAPERVILLE, KEHE DC DALLAS)
+  - KeHE item numbers are typically 6-digit
+  - Similar structure to UNFI — both natural food distributors
+  - KeHE may include category codes in REF segments
