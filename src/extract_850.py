@@ -72,7 +72,11 @@ _DTM_LABELS = {
     "004": "Purchase Order Date",
     "010": "Requested Ship",
     "037": "Ship Not Before",
+    "038": "Ship Not After",
     "063": "Do Not Deliver After",
+    "064": "Do Not Deliver Before",
+    "118": "Requested Pick-up",
+    "175": "Cancel If Not Shipped By",
 }
 
 _PRODUCT_ID_FIELDS = {
