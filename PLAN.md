@@ -76,7 +76,7 @@ First vertical slice — raw EDI text to structured output in a browser.
       Correctly separates allowance lines from line items. Tests pass
       against all Walmart samples.
 
-- [ ] 1.5: FastAPI + HTMX skeleton with 850 inbound mode
+- [x] 1.5: FastAPI + HTMX skeleton with 850 inbound mode
     - Depends on: 1.4
     - Done when: Web page at localhost — paste or upload a Walmart 850,
       see structured table with header summary, line items, allowances,

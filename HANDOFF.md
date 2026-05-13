@@ -9,6 +9,32 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-05-12 — FastAPI + HTMX web skeleton complete (Task 1.5)
+
+**Phase:** Phase 2 — Build it right (mid-implementation, Milestone 1 nearly complete)
+
+**Goal:** Build the FastAPI + HTMX web skeleton for 850 inbound mode — paste or upload a Walmart 850, see structured table output in browser.
+
+**Completed:**
+- Created pyproject.toml with FastAPI, uvicorn, Jinja2, python-multipart dependencies
+- Built src/main.py with GET / and POST /parse endpoints, Jinja2 filters for dates/currency/quantities
+- Built Jinja2 templates: base layout (HTMX CDN), landing page (paste textarea + file upload), results partial (PO header card with retailer badge, key dates, addresses, line items with catch-weight badges and line-level allowances, header allowances, totals), error partial with message + hint
+- Built src/static/style.css — clean, sober, data-forward styling
+- Fixed ISA08 padding in 850_basic.edi and 850_catch_weight.edi (16 chars → 15, missed in previous session)
+- Logged 2 failures: Starlette TemplateResponse API change, incomplete ISA padding fix
+
+**Tried, didn't work:**
+- Old Starlette TemplateResponse(name, context) API broke silently with Starlette 1.0 / FastAPI 0.136+ — context dict passed as template name, causing "unhashable type: dict" deep in Jinja2 cache. Fixed by switching to new API: TemplateResponse(request, name, context).
+- Port 8000 zombie from background uvicorn required switching to port 8001 for preview testing.
+
+**State:** Milestone 1 is 5/6 complete. Web UI works end-to-end for Walmart 850s — paste, upload, and error handling all verified. 80 tests pass.
+
+**Next concrete action:** Task 1.6 — CSV + PDF export for 850. Download buttons on results page producing correct CSV (importable into Excel/ERP) and formatted PDF with header + line items + allowances.
+
+**Blockers:** None
+
+---
+
 ## 2026-05-12 20:30 — Core parser pipeline complete (Milestone 1, tasks 1.1–1.4)
 
 **Phase:** Phase 2 — Build it right (post-clarify, mid-implementation)

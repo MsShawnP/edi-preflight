@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}EDI Pre-flight — 850 Purchase Order Parser{% endblock %}
+
+{% block content %}
+<form hx-post="/parse" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading" enctype="multipart/form-data">
+    <div class="input-group">
+        <label for="edi_text">Paste EDI document</label>
+        <textarea id="edi_text" name="edi_text" rows="12"
+                  placeholder="Paste your 850 Purchase Order here..."></textarea>
+    </div>
+    <div class="input-divider">or</div>
+    <div class="input-group">
+        <label for="file">Upload EDI file</label>
+        <input type="file" id="file" name="file" accept=".edi,.txt,.x12">
+    </div>
+    <div class="form-actions">
+        <button type="submit">Parse Document</button>
+        <span id="loading" class="htmx-indicator">Parsing...</span>
+    </div>
+</form>
+<div id="results"></div>
+{% endblock %}

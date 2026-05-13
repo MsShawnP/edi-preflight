@@ -54,3 +54,27 @@ quarto" or "scope, scrollytelling, decoration"]
 **Status:** Resolved
 
 **Tags:** edi, sac, allowance, positional-format, sample-data
+
+### 2026-05-12 — Starlette TemplateResponse API changed in v1.0
+
+**Attempted:** Used old-style `templates.TemplateResponse("index.html", {"request": request})` — the signature documented in most FastAPI tutorials.
+
+**Why it didn't work:** Starlette 1.0 (ships with FastAPI 0.136+) changed the signature to `TemplateResponse(request, name, context)`. The old form passes the context dict as the `name` parameter. Jinja2 then tries to use the dict as a cache key, raising `TypeError: unhashable type: 'dict'`. The error is confusing because it surfaces deep in Jinja2 internals, not at the call site.
+
+**What we tried instead:** Changed all calls to `templates.TemplateResponse(request, "index.html", {context})`. TestClient confirmed the fix immediately.
+
+**Status:** Resolved
+
+**Tags:** fastapi, starlette, jinja2, templates, api-change
+
+### 2026-05-12 — ISA padding fix from previous session was incomplete
+
+**Attempted:** Previous session identified and fixed the ISA08 padding bug (16 chars instead of 15). Fix was committed and logged.
+
+**Why it didn't work:** Only the allowances sample (850_with_allowances.edi) was corrected. The basic and catch_weight samples still had "CINDERHAVEN" padded to 16 chars. The 23 extraction tests that load from these two files all failed with the same delimiter-conflict error. Likely cause: the fix was applied to one file and the other two were missed before committing.
+
+**What we tried instead:** Grep-fixed both remaining files. Verified all 80 tests pass.
+
+**Status:** Resolved
+
+**Tags:** edi, isa, padding, sample-data, incomplete-fix

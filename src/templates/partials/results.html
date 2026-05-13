@@ -1,0 +1,185 @@
+<div class="results">
+    <section class="po-header">
+        <div class="header-top">
+            <span class="retailer-badge">{{ po.retailer.value | title }}</span>
+            <h2>PO #{{ po.po_number }}</h2>
+        </div>
+        <dl class="po-meta">
+            <div>
+                <dt>Type</dt>
+                <dd>{{ po_type_label }}</dd>
+            </div>
+            <div>
+                <dt>Date</dt>
+                <dd>{{ po.po_date | edi_date }}</dd>
+            </div>
+            {% if po.department %}
+            <div>
+                <dt>Department</dt>
+                <dd>{{ po.department }}</dd>
+            </div>
+            {% endif %}
+            {% if po.terms %}
+            <div>
+                <dt>Terms</dt>
+                <dd>{{ po.terms }}</dd>
+            </div>
+            {% endif %}
+            <div>
+                <dt>Purpose</dt>
+                <dd>{{ purpose_label }}</dd>
+            </div>
+        </dl>
+    </section>
+
+    {% if po.dates %}
+    <section>
+        <h3>Key Dates</h3>
+        <table class="data-table compact">
+            <thead>
+                <tr>
+                    <th>Date Type</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in po.dates %}
+                <tr>
+                    <td>{{ d.label }}</td>
+                    <td>{{ d.date | edi_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endif %}
+
+    {% if po.addresses %}
+    <section>
+        <h3>Addresses</h3>
+        <div class="address-grid">
+            {% for addr in po.addresses %}
+            <div class="address-card">
+                <h4>{{ addr.entity_code }}{% if addr.entity_code == "ST" %} — Ship To{% elif addr.entity_code == "BT" %} — Bill To{% elif addr.entity_code == "VN" %} — Vendor{% elif addr.entity_code == "SU" %} — Supplier{% endif %}</h4>
+                <p class="address-name">{{ addr.entity_name }}</p>
+                {% if addr.street %}<p>{{ addr.street }}</p>{% endif %}
+                {% if addr.city %}<p>{{ addr.city }}{% if addr.state %}, {{ addr.state }}{% endif %} {{ addr.zip_code }}</p>{% endif %}
+                {% if addr.id_code %}<p class="address-id">ID: {{ addr.id_code }}</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section>
+        <h3>Line Items ({{ po.line_items | length }})</h3>
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Line</th>
+                        <th>Description</th>
+                        <th class="num">Qty</th>
+                        <th>UOM</th>
+                        <th class="num">Unit Price</th>
+                        <th class="num">Extended</th>
+                        <th>UPC</th>
+                        <th>Item #</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in po.line_items %}
+                    <tr>
+                        <td>{{ item.line_number }}</td>
+                        <td>
+                            {{ item.description }}
+                            {% if item.is_catch_weight %}<span class="badge badge-warn">Catch Weight</span>{% endif %}
+                        </td>
+                        <td class="num">{{ item.quantity | qty }}</td>
+                        <td>{{ item.unit_of_measure }}</td>
+                        <td class="num">{{ item.unit_price | currency }}</td>
+                        <td class="num">{{ (item.quantity * item.unit_price) | currency }}</td>
+                        <td class="mono">{{ item.upc }}</td>
+                        <td class="mono">{{ item.buyers_item_number or item.vendor_item_number }}</td>
+                    </tr>
+                    {% if item.is_catch_weight and item.weight %}
+                    <tr class="detail-row">
+                        <td></td>
+                        <td colspan="7">
+                            Weight: {{ item.weight }} {{ item.weight_unit }}
+                            {% if item.pack_quantity %} · Pack: {{ item.pack_quantity }}{% if item.pack_size %}/{{ item.pack_size }}{% endif %}{% if item.pack_uom %} {{ item.pack_uom }}{% endif %}{% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% if item.allowances %}
+                    {% for alw in item.allowances %}
+                    <tr class="detail-row">
+                        <td></td>
+                        <td colspan="7">
+                            {{ "Allowance" if alw.is_allowance else "Charge" }}: {{ alw.description or alw.code }}
+                            {% if alw.amount %} · {{ alw.amount | currency }}{% endif %}
+                            {% if alw.percent %} · {{ alw.percent }}%{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {% if po.header_allowances %}
+    <section>
+        <h3>Header Allowances &amp; Charges</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th class="num">Amount</th>
+                    <th class="num">Percent</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alw in po.header_allowances %}
+                <tr>
+                    <td>{{ "Allowance" if alw.is_allowance else "Charge" }}</td>
+                    <td class="mono">{{ alw.code }}</td>
+                    <td>{{ alw.description }}</td>
+                    <td class="num">{% if alw.amount %}{{ alw.amount | currency }}{% endif %}</td>
+                    <td class="num">{% if alw.percent %}{{ alw.percent }}%{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endif %}
+
+    {% if po.total_amount or po.total_quantity %}
+    <section class="totals">
+        <h3>Totals</h3>
+        <dl class="po-meta">
+            {% if po.total_line_items %}
+            <div>
+                <dt>Line Items</dt>
+                <dd>{{ po.total_line_items }}</dd>
+            </div>
+            {% endif %}
+            {% if po.total_quantity %}
+            <div>
+                <dt>Total Quantity</dt>
+                <dd>{{ po.total_quantity | qty }}</dd>
+            </div>
+            {% endif %}
+            {% if po.total_amount %}
+            <div>
+                <dt>Total Amount</dt>
+                <dd>{{ po.total_amount | currency }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+    </section>
+    {% endif %}
+</div>
