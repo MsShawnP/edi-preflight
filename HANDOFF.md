@@ -9,6 +9,40 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-05-14 — Project audit + cleanup
+
+**Phase:** Post-arc audit (all 6 milestones complete; this is a cleanup pass before deploy).
+
+**Goal:** Audit the project end-to-end, report findings, fix what's worth fixing.
+
+**Completed:**
+- Ran the full audit. Six findings written up; five actioned, one (rules/README.md drift note) was already documented and skipped.
+- Fixed `tests/test_export_pdf.py::test_contains_catch_weight_marker` — the assertion `b"CW" in pdf_bytes` could never succeed because ReportLab compresses page content streams (FlateDecode). Replaced with a size comparison against the same PO rendered with catch-weight flags cleared, plus a sanity assert that the sample actually contains at least one catch-weight item. The previous /wrap claimed "254 tests passing" — actual count had been 253 pass / 1 fail.
+- Rewrote README.md. Was stuck on "Early development. Not yet functional." despite 23/23 tasks done; replaced with a real description, local-run instructions, repo layout, and deploy note.
+- Added `_extract_po_or_error` helper in `src/main.py` and wrapped `/export/csv`, `/export/pdf`, `/export/validation-pdf` with the same try/except behavior `/parse` and `/validate` had. Bad input to an export endpoint now returns 400 + plain text instead of a 500 stack trace.
+- Tightened the Dockerfile comment to explicitly call out that the inlined deps must stay in sync with `pyproject.toml [project].dependencies`. Kept the inline approach — switching to `pip install .` would require adding a build-system and packaging `src/`, disproportionate for today's drift risk.
+- Marked the PLAN.md "Definition of done" rollup checkboxes that were already met by completed tasks. Left the "Deployed to edi-preflight.fly.dev" box unchecked — deploy config shipped, `flyctl deploy` has not actually run.
+- Branch: `claude/audit-project-1Kvd1`. Commit `4516195` pushed.
+
+**Tried, didn't work:**
+- Considered moving Dockerfile to `pip install .` from pyproject.toml. Would need `[build-system]` + `[tool.setuptools.packages]` because source lives in `src/` and is imported as `from src.x import ...` — packaging gymnastics for marginal benefit, so backed off and kept the inline deps with a stronger sync comment instead.
+- Considered using `pypdf` to decompress PDF streams in the catch-weight test. Avoided adding a test-only dependency; the size-comparison approach (already used by the allowances test) is sufficient.
+
+**State:** 254 tests passing. Working tree clean. Audit branch pushed but no PR opened (user hasn't asked).
+
+**Next concrete action:** Decide whether to merge `claude/audit-project-1Kvd1` to main, then run `flyctl deploy` to take the tool live at edi-preflight.fly.dev.
+
+**Blockers:** None for merge. Deploy still requires Fly.io account + flyctl CLI on the operator's machine.
+
+**Key files touched this session:**
+- tests/test_export_pdf.py — catch-weight test fix
+- README.md — full rewrite
+- src/main.py — `_extract_po_or_error` helper + try/except on three export endpoints
+- Dockerfile — stronger sync comment
+- PLAN.md — rollup checkboxes updated
+
+---
+
 ## 2026-05-12 — All milestones complete: ready for deploy
 
 **Phase:** Phase 2 — Build it right (all milestones done, deploy pending)
