@@ -1,0 +1,111 @@
+# Costco 850 Purchase Order — Spec Reference (Version 4010)
+# Source: Official Costco Trading Partner Profile PDF.
+
+retailer: costco
+document_type: "850"
+version: "004010"
+
+identification:
+  isa_qualifier: "12"
+  known_ids:
+    - "4254277461"
+    - "4253138601"
+    - "245588694"
+    - "103391843"
+  notes: "4254277461 is official US production. Others are variants (CA, CommerceHub, VMI)."
+
+header_segments:
+  - segment: BEG
+    required: true
+    elements:
+      BEG01: { name: purpose_code, values: ["00"], description: "Only originals" }
+      BEG02: { name: po_type, values: ["SA", "ZZ"], description: "SA=Standard, ZZ=Consignment" }
+      BEG03: { name: po_number, description: "Format LLLMMDDNNN (location+date+sequence)" }
+      BEG05: { name: date, format: CCYYMMDD }
+
+  - segment: REF
+    required: false
+    qualifiers:
+      VR: vendor_id_number
+    notes: "Costco only documents VR in official warehouse spec"
+
+  - segment: FOB
+    required: false
+    description: "F.O.B. related instructions"
+
+  - segment: DTM
+    required: true
+    qualifiers:
+      "175": cancel_if_not_shipped_by
+      "010": requested_ship_date
+      "002": requested_delivery_date
+    notes: "Always sends cancel date (175) plus either ship (010) or delivery (002)"
+
+  - segment: SAC
+    required: false
+    level: header
+    elements:
+      SAC02: { values: ["ZZZZ"], description: "Always Mutually Defined — use SAC15 for meaning" }
+      SAC12: { values: ["02", "03", "06"], description: "02=Off Invoice, 03=Vendor Check, 06=Customer Payment" }
+      SAC15: { name: description, description: "Critical — the only way to identify the allowance type" }
+
+  - segment: N9
+    required: false
+    qualifiers:
+      H7: special_instructions
+      H5: legal_disclaimer
+    notes: "Followed by MSG segment with free-form text"
+
+n1_loop:
+  entity_codes:
+    ST: { name: ship_to, required: true, description: "Costco warehouse or depot" }
+  id_qualifiers:
+    "9": duns_plus_4
+  notes:
+    - "Only ST — no BT, SH, or VN in warehouse 850"
+    - "Warehouse DUNS+4 format: 103391843nnnn"
+    - "PER*RE carries delivery appointment number, not just a phone"
+
+po1_loop:
+  segment: PO1
+  elements:
+    PO103: { name: unit_of_measure, common_values: ["CA", "EA"] }
+  product_id_pairs:
+    IN: costco_item_number
+    VN: vendor_item_number
+    UA: upc_ean_case_code
+    UP: upc_consumer
+    UI: upc_ean_consumer
+    IB: isbn
+  notes:
+    - "IN (Costco item number, up to 7 digits) is the primary identifier"
+    - "When PO106/07 is not IN, PO108/09 will carry Costco item number"
+
+  child_segments:
+    - segment: PID
+      required: false
+    - segment: SAC
+      required: false
+      level: line_item
+      notes: "Same ZZZZ pattern as header — description-driven"
+
+segments_not_present:
+  - PO4
+  - MEA
+  - SDQ
+  - AMT
+  - ITD
+  - TD5
+
+summary_segments:
+  - segment: CTT
+    elements:
+      CTT01: { name: line_item_count }
+    notes: "No CTT02 hash total, no AMT segment"
+
+notes:
+  - "Costco calls retail locations 'warehouses' and distribution facilities 'depots'"
+  - "No AMT segment — total must be computed from line items"
+  - "No PO4/MEA — no catch-weight or pack detail segments"
+  - "SAC always uses ZZZZ — must parse description text for meaning"
+  - "PO number format LLLMMDDNNN encodes location + date + sequence"

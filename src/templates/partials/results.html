@@ -19,6 +19,12 @@
                 <dd>{{ po.department }}</dd>
             </div>
             {% endif %}
+            {% if po.vendor_number %}
+            <div>
+                <dt>Vendor #</dt>
+                <dd>{{ po.vendor_number }}</dd>
+            </div>
+            {% endif %}
             {% if po.terms %}
             <div>
                 <dt>Terms</dt>
@@ -60,7 +66,7 @@
         <div class="address-grid">
             {% for addr in po.addresses %}
             <div class="address-card">
-                <h4>{{ addr.entity_code }}{% if addr.entity_code == "ST" %} — Ship To{% elif addr.entity_code == "BT" %} — Bill To{% elif addr.entity_code == "VN" %} — Vendor{% elif addr.entity_code == "SU" %} — Supplier{% endif %}</h4>
+                <h4>{{ addr.entity_code }}{% if addr.entity_code == "ST" %} — Ship To{% elif addr.entity_code == "BT" %} — Bill To{% elif addr.entity_code == "VN" %} — Vendor{% elif addr.entity_code == "SU" %} — Supplier{% elif addr.entity_code == "SF" %} — Ship From{% elif addr.entity_code == "BY" %} — Buying Party{% endif %}</h4>
                 <p class="address-name">{{ addr.entity_name }}</p>
                 {% if addr.street %}<p>{{ addr.street }}</p>{% endif %}
                 {% if addr.city %}<p>{{ addr.city }}{% if addr.state %}, {{ addr.state }}{% endif %} {{ addr.zip_code }}</p>{% endif %}
@@ -179,7 +185,27 @@
                 <dd>{{ po.total_amount | currency }}</dd>
             </div>
             {% endif %}
+            {% if po.total_weight %}
+            <div>
+                <dt>Total Weight</dt>
+                <dd>{{ po.total_weight | qty }} {{ po.total_weight_unit }}</dd>
+            </div>
+            {% endif %}
         </dl>
     </section>
     {% endif %}
+
+    <section class="export-actions">
+        <h3>Export</h3>
+        <div class="export-buttons">
+            <form method="post" action="/export/csv">
+                <input type="hidden" name="edi_text" value="{{ edi_content | e }}">
+                <button type="submit" class="btn-export">Download CSV</button>
+            </form>
+            <form method="post" action="/export/pdf">
+                <input type="hidden" name="edi_text" value="{{ edi_content | e }}">
+                <button type="submit" class="btn-export">Download PDF</button>
+            </form>
+        </div>
+    </section>
 </div>

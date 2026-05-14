@@ -1,0 +1,82 @@
+# UNFI 850 Purchase Order — Spec Reference (Version 4010)
+# Inferred from Dot Foods 850 spec (verified) + UNFI 856/810 Stedi guides.
+# UNFI's actual 850 guide is behind Zendesk auth — flag low-confidence items.
+
+retailer: unfi
+document_type: "850"
+version: "004010"
+
+identification:
+  isa_qualifier: "01"
+  known_duns:
+    - "048826914"
+    - "0488269140000"
+  notes: "UNFI may have per-DC DUNS numbers beyond the corporate one"
+
+header_segments:
+  - segment: BEG
+    required: true
+    elements:
+      BEG01: { name: purpose_code, values: ["00"] }
+      BEG02: { name: po_type, values: ["NE", "DS"], description: "NE=New Order (primary), DS=Dropship" }
+      BEG03: { name: po_number }
+      BEG05: { name: date, format: CCYYMMDD }
+
+  - segment: REF
+    required: false
+    qualifiers:
+      IA: internal_dc_vendor_number
+      VR: vendor_reference
+      CO: customer_order_number
+
+  - segment: DTM
+    required: false
+    qualifiers:
+      "002": requested_delivery_date
+      "118": requested_pickup
+
+  - segment: ITD
+    required: false
+    description: "Terms — UNFI typically NET 30"
+
+n1_loop:
+  entity_codes:
+    SF: { name: ship_from, description: "Supplier location (dropship)" }
+    ST: { name: ship_to, description: "UNFI distribution center" }
+    BT: { name: bill_to, description: "UNFI accounts payable" }
+  id_qualifiers:
+    "9": duns_plus_4
+
+po1_loop:
+  segment: PO1
+  elements:
+    PO103: { name: unit_of_measure, common_values: ["CA"] }
+    PO105: { name: price_basis, notes: "May be empty" }
+  product_id_pairs:
+    UK: gtin_14_primary
+    UA: upc_ean_case_code
+    UP: upc_consumer
+    UI: upc_consumer_ean
+    PI: purchasers_item_code
+    VN: vendor_item_number
+
+  child_segments:
+    - segment: PID
+      required: false
+
+sac_usage: "Minimal or none on 850 — allowances handled via 810 invoice"
+
+summary_segments:
+  - segment: CTT
+    elements:
+      CTT01: { name: line_item_count }
+      CTT02: { name: hash_total }
+  - segment: AMT
+    qualifier: "TT"
+    description: "Total Transaction Amount"
+
+notes:
+  - "UNFI may send 875 (Grocery PO) instead of 850 in some relationships"
+  - "DTM 118 reflects UNFI pickup model — UNFI arranges freight collection"
+  - "GTIN-14 (UK qualifier) is the preferred product identifier"
+  - "Spec inferred from proxy sources — verify against actual UNFI 850 documents"

@@ -41,9 +41,15 @@ _RETAILER_PATTERNS: list[tuple[str, Retailer]] = [
 _RETAILER_IDS: dict[str, Retailer] = {
     "0078742000000": Retailer.WALMART,
     "0078742052892": Retailer.WALMART,
+    "048826914": Retailer.UNFI,
+    "0488269140000": Retailer.UNFI,
     "0569813430000": Retailer.KEHE,
     "0054370330000": Retailer.KEHE,
+    "4254277461": Retailer.COSTCO,
+    "4253138601": Retailer.COSTCO,
     "4253138601CH": Retailer.COSTCO,
+    "245588694": Retailer.COSTCO,
+    "103391843": Retailer.COSTCO,
 }
 
 

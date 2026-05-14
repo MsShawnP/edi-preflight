@@ -1,14 +1,15 @@
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from src.envelope import EnvelopeError
+from src.envelope import EnvelopeError, parse_envelope
+from src.export_csv import export_csv
+from src.export_pdf import export_pdf
 from src.extract_850 import ExtractionError, extract_850
 from src.x12_tokenizer import TokenizeError, tokenize
-from src.envelope import parse_envelope
 
 _SRC_DIR = Path(__file__).parent
 
@@ -23,6 +24,10 @@ _PO_TYPE_LABELS = {
     "BE": "Blanket Order",
     "BK": "Blanket Order",
     "NE": "New Order",
+    "CN": "Consigned",
+    "NP": "New Product",
+    "RO": "Rush Order",
+    "ZZ": "Consignment",
 }
 
 _PURPOSE_LABELS = {
@@ -59,22 +64,28 @@ async def index(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
+async def _read_edi_content(
+    edi_text: str = "",
+    file: UploadFile | None = None,
+) -> str:
+    if file and file.filename:
+        raw_bytes = await file.read()
+        try:
+            return raw_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            return raw_bytes.decode("latin-1")
+    elif edi_text.strip():
+        return edi_text
+    return ""
+
+
 @app.post("/parse", response_class=HTMLResponse)
 async def parse_edi(
     request: Request,
     edi_text: str = Form(""),
     file: UploadFile | None = File(default=None),
 ):
-    content = ""
-
-    if file and file.filename:
-        raw_bytes = await file.read()
-        try:
-            content = raw_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            content = raw_bytes.decode("latin-1")
-    elif edi_text.strip():
-        content = edi_text
+    content = await _read_edi_content(edi_text, file)
 
     if not content.strip():
         return templates.TemplateResponse(request, "partials/error.html", {
@@ -101,4 +112,33 @@ async def parse_edi(
         "po": po,
         "po_type_label": _PO_TYPE_LABELS.get(po.po_type, po.po_type),
         "purpose_label": _PURPOSE_LABELS.get(po.purpose_code, po.purpose_code),
+        "edi_content": content,
     })
+
+
+@app.post("/export/csv")
+async def export_csv_endpoint(edi_text: str = Form("")):
+    tokens = tokenize(edi_text)
+    envelope = parse_envelope(tokens)
+    po = extract_850(envelope)
+    csv_data = export_csv(po)
+    filename = f"PO_{po.po_number}.csv" if po.po_number else "purchase_order.csv"
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.post("/export/pdf")
+async def export_pdf_endpoint(edi_text: str = Form("")):
+    tokens = tokenize(edi_text)
+    envelope = parse_envelope(tokens)
+    po = extract_850(envelope)
+    pdf_data = export_pdf(po)
+    filename = f"PO_{po.po_number}.pdf" if po.po_number else "purchase_order.pdf"
+    return Response(
+        content=pdf_data,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

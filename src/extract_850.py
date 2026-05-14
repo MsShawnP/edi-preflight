@@ -73,6 +73,9 @@ _DTM_LABELS = {
     "010": "Requested Ship",
     "037": "Ship Not Before",
     "063": "Do Not Deliver After",
+    "064": "Do Not Deliver Before",
+    "118": "Requested Pickup",
+    "175": "Cancel If Not Shipped By",
 }
 
 _PRODUCT_ID_FIELDS = {
@@ -83,6 +86,11 @@ _PRODUCT_ID_FIELDS = {
     "SK": "sku",
     "EN": "upc",
     "BP": "buyers_item_number",
+    "UA": "upc",
+    "UI": "upc",
+    "PI": "buyers_item_number",
+    "MG": "vendor_item_number",
+    "IB": "sku",
 }
 
 
@@ -101,7 +109,10 @@ class PurchaseOrder:
     total_line_items: int = 0
     total_quantity: float = 0.0
     total_amount: float = 0.0
+    total_weight: float = 0.0
+    total_weight_unit: str = ""
     terms: str = ""
+    vendor_number: str = ""
 
     @property
     def ship_to(self) -> Address | None:
@@ -205,6 +216,8 @@ def extract_850(envelope: Envelope) -> PurchaseOrder:
             qualifier = seg.element(1).strip()
             if qualifier == "DP":
                 po.department = seg.element(2).strip()
+            elif qualifier in ("IA", "VR"):
+                po.vendor_number = seg.element(2).strip()
 
         elif sid == "DTM" and current_line is None:
             qualifier = seg.element(1).strip()
@@ -295,10 +308,14 @@ def extract_850(envelope: Envelope) -> PurchaseOrder:
         elif sid == "CTT":
             po.total_line_items = int(_parse_float(seg.element(1)))
             po.total_quantity = _parse_float(seg.element(2))
+            weight = _parse_float(seg.element(3))
+            if weight:
+                po.total_weight = weight
+                po.total_weight_unit = seg.element(4).strip()
 
         elif sid == "AMT":
             qualifier = seg.element(1).strip()
-            if qualifier == "35":
+            if qualifier in ("35", "TT"):
                 po.total_amount = _parse_float(seg.element(2))
 
     return po

@@ -1,0 +1,113 @@
+# KeHE 850 Purchase Order — Spec Reference (Version 5010)
+# Source: Official KeHE EDI 850 spec via SPS Commerce (revised 05/16/2021).
+
+retailer: kehe
+document_type: "850"
+version: "005010"
+
+identification:
+  isa_qualifier: "16"
+  known_duns:
+    - "0569813430000"
+    - "0054370330000"
+
+header_segments:
+  - segment: BEG
+    required: true
+    elements:
+      BEG01: { name: purpose_code, values: ["00"] }
+      BEG02: { name: po_type, values: ["SA", "DS"], description: "SA=Stand-alone, DS=Dropship (BTST)" }
+      BEG03: { name: po_number }
+      BEG05: { name: date, format: CCYYMMDD }
+
+  - segment: REF
+    required: false
+    qualifiers:
+      IA: dc_vendor_number
+
+  - segment: DTM
+    required: false
+    qualifiers:
+      "002": delivery_requested
+      "118": requested_pickup
+
+  - segment: ITD
+    required: false
+    elements:
+      ITD01: { values: ["14"], description: "Previously agreed upon" }
+      ITD02: { values: ["15"], description: "Receipt of Goods" }
+      ITD07: { name: net_days }
+      ITD12: { name: description }
+
+  - segment: SAC
+    required: false
+    level: header
+    codes:
+      B720: cooperative_advertising_merchandising
+      G860: spoilage_shrink_allowance
+    handling_codes:
+      "02": off_invoice
+
+  - segment: N9
+    required: false
+    qualifiers:
+      KZ: po_acceptance_terms
+    notes: "Followed by multiple MTX segments with legal boilerplate"
+
+n1_loop:
+  entity_codes:
+    ST: { name: ship_to, description: "KeHE DC" }
+    BT: { name: bill_to, description: "Centralized PO Box in Jacksonville FL" }
+    SF: { name: ship_from, description: "Picked-up POs only" }
+    BY: { name: buying_party, description: "Used when BEG02=DS — identifies buying DC" }
+  id_qualifiers:
+    "9": duns_plus_4
+  notes:
+    - "When BEG02=DS: ST will NOT have N103/N104, BY will carry DC identifier"
+    - "KeHE vendor numbers (REF*IA) are DC-specific"
+
+po1_loop:
+  segment: PO1
+  elements:
+    PO103: { name: unit_of_measure, common_values: ["CA"], description: "CA=Case (not CS)" }
+    PO105: { name: price_basis, notes: "May be empty" }
+  product_id_pairs:
+    UP: upc_consumer_primary
+    UK: gtin_14
+    VN: vendor_item_number
+    IN: kehe_item_number
+  notes:
+    - "UPC (UP) is the required primary pair — differs from Walmart which leads with IN"
+    - "IN = KeHE item number, can differ by DC"
+
+  child_segments:
+    - segment: PID
+      required: false
+    - segment: SAC
+      required: false
+      level: line_item
+      codes:
+        C310: discount
+      handling_codes:
+        "02": off_invoice
+      notes: "Can be rate-based (SAC05) or percentage-based (SAC07)"
+
+summary_segments:
+  - segment: CTT
+    elements:
+      CTT01: { name: line_item_count }
+      CTT02: { name: hash_total }
+      CTT03: { name: weight, format: decimal }
+      CTT04: { name: weight_unit, values: ["LB"] }
+    notes: "KeHE includes total weight in CTT — Walmart does not"
+
+  - segment: AMT
+    qualifier: "TT"
+    description: "Total Transaction Amount (not 35 like Walmart)"
+
+sac_codes:
+  header:
+    B720: Cooperative Advertising/Merchandising Allowance
+    G860: Spoilage/Shrink Allowance
+  line_item:
+    C310: Discount (rate or percentage based)

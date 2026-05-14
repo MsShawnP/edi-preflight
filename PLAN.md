@@ -82,7 +82,7 @@ First vertical slice — raw EDI text to structured output in a browser.
       see structured table with header summary, line items, allowances,
       and retailer badge. Both paste and file upload work.
 
-- [ ] 1.6: CSV + PDF export for 850
+- [x] 1.6: CSV + PDF export for 850
     - Depends on: 1.5
     - Done when: Download buttons on results page produce correct CSV
       (importable into Excel/ERP) and formatted PDF with header + line
@@ -94,25 +94,25 @@ Tasks 2.1–2.4 are independent of each other and can be parallelized.
 Each involves spec research (user-bottlenecked) + extraction quirks +
 samples.
 
-- [ ] 2.1: Amazon 850 — spec research + extraction + samples
+- [x] 2.1: Amazon 850 — spec research + extraction + samples
     - Depends on: 1.4
     - Done when: Amazon 850 quirks documented in YAML. At least 2
       synthetic samples. Extraction handles Amazon-specific fields.
       Tests pass.
 
-- [ ] 2.2: UNFI 850 — spec research + extraction + samples
+- [x] 2.2: UNFI 850 — spec research + extraction + samples
     - Depends on: 1.4
     - Done when: Same verification as 2.1, for UNFI.
 
-- [ ] 2.3: KeHE 850 — spec research + extraction + samples
+- [x] 2.3: KeHE 850 — spec research + extraction + samples
     - Depends on: 1.4
     - Done when: Same verification as 2.1, for KeHE.
 
-- [ ] 2.4: Costco 850 — spec research + extraction + samples
+- [x] 2.4: Costco 850 — spec research + extraction + samples
     - Depends on: 1.4
     - Done when: Same verification as 2.1, for Costco.
 
-- [ ] 2.5: 850 integration — all five retailers in web UI
+- [x] 2.5: 850 integration — all five retailers in web UI
     - Depends on: 1.5, 2.1–2.4
     - Done when: Web UI auto-detects retailer from document headers.
       All five retailers parse correctly with retailer-specific

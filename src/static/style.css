@@ -304,6 +304,31 @@ button[type="submit"]:hover { background: #3d6a88; }
     padding: 0.75rem 1rem;
 }
 
+/* Export buttons */
+
+.export-actions { margin-top: 1.5rem; }
+
+.export-buttons {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-export {
+    background: #fff;
+    color: #4a7c9e;
+    border: 1px solid #4a7c9e;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-export:hover {
+    background: #4a7c9e;
+    color: #fff;
+}
+
 /* Error panel */
 
 .error-panel {

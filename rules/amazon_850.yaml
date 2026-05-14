@@ -1,0 +1,94 @@
+# Amazon 850 Purchase Order — Spec Reference (Version 4010)
+# Source: AMZ_Procurement_850_MappingGuide.pdf (2013). Confidence notes inline.
+
+retailer: amazon
+document_type: "850"
+version: "004010"
+
+identification:
+  isa_qualifier: "ZZ"
+  isa_sender_id: "AMAZON"
+  gs_sender: "AMAZON"
+
+header_segments:
+  - segment: BEG
+    required: true
+    elements:
+      BEG01: { name: purpose_code, values: ["00"], description: "Only originals" }
+      BEG02: { name: po_type, values: ["CN", "NE", "NP", "RO"], description: "CN=Consigned, NE=New, NP=New Product, RO=Rush" }
+      BEG03: { name: po_number, description: "Alpha + 7 digits (e.g., G7984251)" }
+      BEG05: { name: date, format: CCYYMMDD }
+
+  - segment: REF
+    required: true
+    qualifiers:
+      CR: customer_reference_code
+      PD: promotion_deal_number
+
+  - segment: CSH
+    required: true
+    description: "Sales requirements — Amazon-specific, not in Walmart 850"
+    elements:
+      CSH01: { name: backorder_code, values: ["N", "Y"], description: "N=No backorder, Y=Backorder allowed" }
+
+  - segment: DTM
+    required: false
+    max_uses: 10
+    qualifiers:
+      "063": do_not_deliver_after
+      "064": do_not_deliver_before
+
+  - segment: N9
+    required: false
+    description: "Special instructions (qualifier L1) — free-form MSG follows"
+    qualifiers:
+      L1: letters_or_notes
+
+n1_loop:
+  description: "Ship-to only — code-based, no street address"
+  entity_codes:
+    ST: { name: ship_to, required: true, description: "FC code only (e.g., RNO1) — no N3/N4" }
+  id_qualifiers:
+    "15": standard_address_number
+    "92": assigned_by_buyer
+    ZZ: mutually_defined
+
+po1_loop:
+  segment: PO1
+  elements:
+    PO103: { name: unit_of_measure, common_values: ["CA", "EA", "PE", "UN"] }
+    PO105: { name: price_basis, values: ["PE"], description: "Price per Each — only value" }
+  product_id_pairs:
+    BP: buyers_part_number
+    EN: ean_13
+    IB: isbn
+    UA: upc_ean_case_code
+    UK: gtin_14
+    UP: upc_consumer
+    VN: vendor_item_number
+  notes:
+    - "Amazon sends only one qualifier/value pair per line item (PO106/PO107)"
+    - "No PID segment — product descriptions not included"
+    - "No PO4, MEA, SAC, or SDQ segments at line level"
+
+segments_not_present:
+  - PID
+  - PO4
+  - MEA
+  - SAC
+  - ITD
+  - TD5
+  - SDQ
+  - AMT
+
+summary_segments:
+  - segment: CTT
+    elements:
+      CTT01: { name: line_item_count }
+      CTT02: { name: hash_total }
+
+notes:
+  - "Amazon 850 is significantly leaner than Walmart — no descriptions, no addresses, no allowances, no amounts"
+  - "Ship-to is a code (FC identifier) requiring external lookup table"
+  - "CSH segment is mandatory and Amazon-specific"
+  - "Spec from 2013 — may have additions via Vendor Central not documented here"

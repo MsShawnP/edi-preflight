@@ -9,6 +9,41 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-05-14 — Milestone 1 + Milestone 2 complete (850 parsing, all five retailers)
+
+**Phase:** Phase 2 — Build it right (Milestones 1–2 complete, Milestone 3 next)
+
+**Goal:** Complete remaining Milestone 1 work (CSV + PDF export) and all of Milestone 2 (expand 850 parsing to Amazon, UNFI, KeHE, Costco).
+
+**Completed:**
+- Task 1.6: CSV + PDF export for 850
+  - src/export_csv.py — one row per line item, denormalized headers, 15 columns
+  - src/export_pdf.py — reportlab Platypus, sections for header/dates/addresses/line items/allowances/totals
+  - POST /export/csv and POST /export/pdf endpoints in main.py
+  - Hidden forms + export buttons in results template
+  - 11 CSV tests, 8 PDF tests — all passing
+- Tasks 2.1–2.4: All four retailers researched, coded, sampled, tested
+  - rules/*.yaml spec files for Amazon, UNFI, KeHE, Costco
+  - 8 synthetic samples (2 per retailer) in samples/
+  - extract_850.py updated: new DTM labels, product ID qualifiers (UA/UI/PI/MG/IB/BP), REF IA/VR → vendor_number, AMT TT qualifier, CTT weight fields
+  - envelope.py updated: DUNS IDs for UNFI, KeHE, Costco; name patterns for Amazon
+  - ~50 multi-retailer tests in test_extract_850_multiretailer.py
+- Task 2.5: Integration — auto-detection already works via envelope.py retailer detection. All five retailers parse correctly through the web UI.
+
+**Key decisions logged:**
+- Multi-retailer extraction stays in shared extract_850 module (no per-retailer modules)
+- YAML spec files are documentation only, not runtime config
+- reportlab for PDF (no system dependencies)
+- CSV uses denormalized rows
+
+**State:** 162 tests passing. Milestones 1 and 2 fully complete. All five retailers' 850 POs parse correctly with retailer-specific handling for dates, product IDs, allowances, terms, vendor numbers, and weight.
+
+**Next concrete action:** Milestone 3 — Walmart 856 validation. Start with Task 3.1 (Walmart 856 spec research + synthetic samples).
+
+**Blockers:** None
+
+---
+
 ## 2026-05-12 — FastAPI + HTMX web skeleton complete (Task 1.5)
 
 **Phase:** Phase 2 — Build it right (mid-implementation, Milestone 1 nearly complete)
