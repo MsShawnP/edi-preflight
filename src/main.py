@@ -119,11 +119,26 @@ async def parse_edi(
     })
 
 
+def _extract_po_or_error(edi_text: str):
+    try:
+        tokens = tokenize(edi_text)
+        envelope = parse_envelope(tokens)
+        return extract_850(envelope), None
+    except (TokenizeError, EnvelopeError, ExtractionError) as e:
+        return None, Response(content=str(e), status_code=400, media_type="text/plain")
+    except Exception as e:
+        return None, Response(
+            content=f"Unexpected error: {e}",
+            status_code=400,
+            media_type="text/plain",
+        )
+
+
 @app.post("/export/csv")
 async def export_csv(edi_text: str = Form("")):
-    tokens = tokenize(edi_text)
-    envelope = parse_envelope(tokens)
-    po = extract_850(envelope)
+    po, error = _extract_po_or_error(edi_text)
+    if error:
+        return error
 
     csv_content = export_850_csv(po)
     filename = f"PO_{po.po_number}.csv" if po.po_number else "purchase_order.csv"
@@ -137,9 +152,9 @@ async def export_csv(edi_text: str = Form("")):
 
 @app.post("/export/pdf")
 async def export_pdf(edi_text: str = Form("")):
-    tokens = tokenize(edi_text)
-    envelope = parse_envelope(tokens)
-    po = extract_850(envelope)
+    po, error = _extract_po_or_error(edi_text)
+    if error:
+        return error
 
     pdf_bytes = export_850_pdf(po)
     filename = f"PO_{po.po_number}.pdf" if po.po_number else "purchase_order.pdf"
@@ -251,8 +266,18 @@ async def export_validation_pdf_endpoint(
     edi_text: str = Form(""),
     retailer: str = Form("auto"),
 ):
-    tokens = tokenize(edi_text)
-    envelope = parse_envelope(tokens)
+    try:
+        tokens = tokenize(edi_text)
+        envelope = parse_envelope(tokens)
+    except (TokenizeError, EnvelopeError) as e:
+        return Response(content=str(e), status_code=400, media_type="text/plain")
+    except Exception as e:
+        return Response(
+            content=f"Unexpected error: {e}",
+            status_code=400,
+            media_type="text/plain",
+        )
+
     result = validate_856(envelope)
 
     detected = envelope.retailer

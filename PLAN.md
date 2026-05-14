@@ -251,19 +251,20 @@ to verify accuracy against actual specs from vendor portals.
 
 ## Definition of done for this arc
 
-- [ ] Inbound 850 parser handles documents from all five retailers with
+- [x] Inbound 850 parser handles documents from all five retailers with
       correct line-item extraction, allowance separation, and retailer
       detection
-- [ ] Outbound 856 validator checks structural, field-level, and
+- [x] Outbound 856 validator checks structural, field-level, and
       retailer-specific rules for all five retailers
-- [ ] Validation findings tagged with severity and chargeback-dollar
+- [x] Validation findings tagged with severity and chargeback-dollar
       estimates
-- [ ] CSV and PDF export working for inbound mode
-- [ ] PDF export working for outbound validation report
-- [ ] Helpful error messages for invalid/truncated/non-EDI input
-- [ ] Deployed and accessible at edi-preflight.fly.dev
-- [ ] Retailer spec rule library in YAML, in the repo
-- [ ] Sample EDI documents (synthetic) in the repo for try-without-data
+- [x] CSV and PDF export working for inbound mode
+- [x] PDF export working for outbound validation report
+- [x] Helpful error messages for invalid/truncated/non-EDI input
+- [ ] Deployed and accessible at edi-preflight.fly.dev (deploy config
+      shipped; `flyctl deploy` not yet run)
+- [x] Retailer spec rule library in YAML, in the repo
+- [x] Sample EDI documents (synthetic) in the repo for try-without-data
 
 ---
 

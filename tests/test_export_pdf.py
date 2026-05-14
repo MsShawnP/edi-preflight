@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 
 from src.envelope import parse_envelope
@@ -42,7 +43,20 @@ class TestPdfExportCatchWeight:
         assert self.pdf_bytes[:5] == b"%PDF-"
 
     def test_contains_catch_weight_marker(self):
-        assert b"CW" in self.pdf_bytes
+        # ReportLab compresses page content streams (FlateDecode), so the
+        # rendered "[CW]" marker isn't searchable in the raw PDF bytes.
+        # Verify by rendering the same PO with catch-weight flags cleared
+        # and confirming the marked version is larger.
+        items_without_cw = [
+            replace(item, is_catch_weight=False) for item in self.po.line_items
+        ]
+        po_without_cw = replace(self.po, line_items=items_without_cw)
+        pdf_without_cw = export_850_pdf(po_without_cw)
+        assert any(item.is_catch_weight for item in self.po.line_items), (
+            "Sample 850_catch_weight.edi should produce at least one "
+            "catch-weight line item"
+        )
+        assert len(self.pdf_bytes) > len(pdf_without_cw)
 
 
 class TestPdfExportAllowances:
