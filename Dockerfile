@@ -17,6 +17,9 @@ COPY src/ src/
 COPY rules/ rules/
 COPY samples/ samples/
 
+RUN adduser --disabled-password --no-create-home appuser
+USER appuser
+
 EXPOSE 8080
 
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]

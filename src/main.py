@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
@@ -19,8 +20,21 @@ from src.validate_856_walmart import validate_856_walmart
 from src.x12_tokenizer import TokenizeError, tokenize
 
 _SRC_DIR = Path(__file__).parent
+_MAX_INPUT_BYTES = 2 * 1024 * 1024  # 2 MB
 
-app = FastAPI(title="EDI Pre-flight")
+app = FastAPI(title="EDI Pre-flight", docs_url=None, redoc_url=None, openapi_url=None)
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'"
+    return response
+
+
 app.mount("/static", StaticFiles(directory=_SRC_DIR / "static"), name="static")
 
 templates = Jinja2Templates(directory=_SRC_DIR / "templates")
@@ -67,17 +81,27 @@ async def index(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
+class InputTooLargeError(Exception):
+    pass
+
+
 async def _read_edi_content(
     edi_text: str = "",
     file: UploadFile | None = None,
 ) -> str:
     if file and file.filename:
         raw_bytes = await file.read()
+        if len(raw_bytes) > _MAX_INPUT_BYTES:
+            raise InputTooLargeError(
+                f"File exceeds the 2 MB limit ({len(raw_bytes):,} bytes)."
+            )
         try:
             return raw_bytes.decode("utf-8")
         except UnicodeDecodeError:
             return raw_bytes.decode("latin-1")
     if edi_text.strip():
+        if len(edi_text.encode("utf-8")) > _MAX_INPUT_BYTES:
+            raise InputTooLargeError("Pasted text exceeds the 2 MB limit.")
         return edi_text
     return ""
 
@@ -88,7 +112,13 @@ async def parse_edi(
     edi_text: str = Form(""),
     file: UploadFile | None = File(default=None),
 ):
-    content = await _read_edi_content(edi_text, file)
+    try:
+        content = await _read_edi_content(edi_text, file)
+    except InputTooLargeError as e:
+        return templates.TemplateResponse(request, "partials/error.html", {
+            "error": str(e),
+            "hint": "EDI documents are typically under 100 KB. Check that you're uploading the right file.",
+        })
 
     if not content.strip():
         return templates.TemplateResponse(request, "partials/error.html", {
@@ -105,9 +135,9 @@ async def parse_edi(
             "error": str(e),
             "hint": getattr(e, "hint", ""),
         })
-    except Exception as e:
+    except Exception:
         return templates.TemplateResponse(request, "partials/error.html", {
-            "error": f"Unexpected error: {e}",
+            "error": "An unexpected error occurred while processing the document.",
             "hint": "The document may not be a valid EDI X12 file.",
         })
 
@@ -119,6 +149,10 @@ async def parse_edi(
     })
 
 
+def _safe_filename(value: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9_-]", "", value)
+
+
 def _extract_po_or_error(edi_text: str):
     try:
         tokens = tokenize(edi_text)
@@ -126,22 +160,22 @@ def _extract_po_or_error(edi_text: str):
         return extract_850(envelope), None
     except (TokenizeError, EnvelopeError, ExtractionError) as e:
         return None, Response(content=str(e), status_code=400, media_type="text/plain")
-    except Exception as e:
+    except Exception:
         return None, Response(
-            content=f"Unexpected error: {e}",
+            content="An unexpected error occurred while processing the document.",
             status_code=400,
             media_type="text/plain",
         )
 
 
 @app.post("/export/csv")
-async def export_csv(edi_text: str = Form("")):
+def export_csv(edi_text: str = Form("")):
     po, error = _extract_po_or_error(edi_text)
     if error:
         return error
 
     csv_content = export_850_csv(po)
-    filename = f"PO_{po.po_number}.csv" if po.po_number else "purchase_order.csv"
+    filename = f"PO_{_safe_filename(po.po_number)}.csv" if po.po_number else "purchase_order.csv"
 
     return Response(
         content=csv_content,
@@ -151,13 +185,13 @@ async def export_csv(edi_text: str = Form("")):
 
 
 @app.post("/export/pdf")
-async def export_pdf(edi_text: str = Form("")):
+def export_pdf(edi_text: str = Form("")):
     po, error = _extract_po_or_error(edi_text)
     if error:
         return error
 
     pdf_bytes = export_850_pdf(po)
-    filename = f"PO_{po.po_number}.pdf" if po.po_number else "purchase_order.pdf"
+    filename = f"PO_{_safe_filename(po.po_number)}.pdf" if po.po_number else "purchase_order.pdf"
 
     return Response(
         content=pdf_bytes,
@@ -191,7 +225,13 @@ async def validate_edi(
     retailer: str = Form("auto"),
     file: UploadFile | None = File(default=None),
 ):
-    content = await _read_edi_content(edi_text, file)
+    try:
+        content = await _read_edi_content(edi_text, file)
+    except InputTooLargeError as e:
+        return templates.TemplateResponse(request, "partials/error.html", {
+            "error": str(e),
+            "hint": "EDI documents are typically under 100 KB. Check that you're uploading the right file.",
+        })
 
     if not content.strip():
         return templates.TemplateResponse(request, "partials/error.html", {
@@ -207,9 +247,9 @@ async def validate_edi(
             "error": str(e),
             "hint": getattr(e, "hint", ""),
         })
-    except Exception as e:
+    except Exception:
         return templates.TemplateResponse(request, "partials/error.html", {
-            "error": f"Unexpected error: {e}",
+            "error": "An unexpected error occurred while processing the document.",
             "hint": "The document may not be a valid EDI X12 file.",
         })
 
@@ -262,7 +302,7 @@ async def validate_edi(
 
 
 @app.post("/export/validation-pdf")
-async def export_validation_pdf_endpoint(
+def export_validation_pdf_endpoint(
     edi_text: str = Form(""),
     retailer: str = Form("auto"),
 ):
@@ -271,9 +311,9 @@ async def export_validation_pdf_endpoint(
         envelope = parse_envelope(tokens)
     except (TokenizeError, EnvelopeError) as e:
         return Response(content=str(e), status_code=400, media_type="text/plain")
-    except Exception as e:
+    except Exception:
         return Response(
-            content=f"Unexpected error: {e}",
+            content="An unexpected error occurred while processing the document.",
             status_code=400,
             media_type="text/plain",
         )
@@ -294,7 +334,7 @@ async def export_validation_pdf_endpoint(
     retailer_label = _RETAILER_LABELS.get(detected, detected.value.title())
     pdf_bytes = export_validation_pdf(result, retailer_label)
 
-    shipment_id = result.bsn_data.get("shipment_id", "")
+    shipment_id = _safe_filename(result.bsn_data.get("shipment_id", ""))
     filename = f"856_validation_{shipment_id}.pdf" if shipment_id else "856_validation.pdf"
 
     return Response(
