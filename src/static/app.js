@@ -3,8 +3,14 @@ function switchMode(mode) {
         t.classList.remove('active');
     });
     document.querySelector('[data-mode="' + mode + '"]').classList.add('active');
-    document.getElementById('mode-inbound').style.display = mode === 'inbound' ? 'block' : 'none';
-    document.getElementById('mode-outbound').style.display = mode === 'outbound' ? 'block' : 'none';
+    var panels = document.querySelectorAll('.mode-panel');
+    panels.forEach(function(p) {
+        if (p.id === 'mode-' + mode) {
+            p.classList.remove('mode-panel-hidden');
+        } else {
+            p.classList.add('mode-panel-hidden');
+        }
+    });
     document.getElementById('results').innerHTML = '';
 }
 

@@ -29,7 +29,7 @@
     </form>
 </div>
 
-<div id="mode-outbound" class="mode-panel" style="display: none;">
+<div id="mode-outbound" class="mode-panel mode-panel-hidden">
     <p class="mode-description">Paste or upload an outbound 856 ASN to validate against retailer-specific rules. Findings include severity tags and chargeback-dollar estimates.</p>
     <button type="button" class="try-sample" data-doc-type="856" data-textarea-id="edi_text_856">Try a sample Walmart 856</button>
     <form hx-post="/validate" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading-outbound" enctype="multipart/form-data">

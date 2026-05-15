@@ -629,6 +629,8 @@ button[type="submit"]:hover { background: #3d6a88; }
 
 .btn-cta:hover { background: #3a6a8a; }
 
+.mode-panel-hidden { display: none; }
+
 /* Try-a-sample link */
 
 .try-sample {

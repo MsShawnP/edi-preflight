@@ -37,8 +37,10 @@ async def security_headers(request: Request, call_next):
         "script-src 'self' https://www.googletagmanager.com; "
         "img-src 'self' data: https://www.google-analytics.com; "
         "connect-src 'self' https://www.google-analytics.com https://analytics.google.com; "
-        "style-src 'self'"
+        "style-src 'self' 'unsafe-inline'"
     )
+    if response.headers.get("content-type", "").startswith("text/html"):
+        response.headers["Cache-Control"] = "no-cache"
     return response
 
 
