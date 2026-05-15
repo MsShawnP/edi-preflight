@@ -31,7 +31,13 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' https://www.googletagmanager.com; "
+        "img-src 'self' data: https://www.google-analytics.com; "
+        "connect-src 'self' https://www.google-analytics.com https://analytics.google.com; "
+        "style-src 'self'"
+    )
     return response
 
 
@@ -71,6 +77,8 @@ def _format_quantity(value: float) -> str:
     return f"{value:g}"
 
 
+_SAMPLES_DIR = _SRC_DIR.parent / "samples"
+
 templates.env.filters["edi_date"] = _format_edi_date
 templates.env.filters["currency"] = _format_currency
 templates.env.filters["qty"] = _format_quantity
@@ -79,6 +87,20 @@ templates.env.filters["qty"] = _format_quantity
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse(request, "index.html")
+
+
+_SAMPLE_FILES = {
+    "850": _SAMPLES_DIR / "walmart" / "850_with_allowances.edi",
+    "856": _SAMPLES_DIR / "walmart" / "856_wrong_hl_order.edi",
+}
+
+
+@app.get("/sample/{doc_type}")
+def get_sample(doc_type: str):
+    path = _SAMPLE_FILES.get(doc_type)
+    if not path or not path.exists():
+        return Response(content="Sample not found", status_code=404)
+    return Response(content=path.read_text(), media_type="text/plain")
 
 
 class InputTooLargeError(Exception):

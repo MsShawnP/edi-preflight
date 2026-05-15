@@ -3,9 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}EDI Pre-flight{% endblock %}</title>
+    <meta name="description" content="Free EDI validation tool for specialty food brands. Parse inbound 850 Purchase Orders and validate outbound 856 ASNs against Walmart, Amazon, UNFI, KeHE, and Costco specs. No login required.">
+    <meta property="og:title" content="EDI Pre-flight — Free EDI Parser &amp; Validator">
+    <meta property="og:description" content="Parse 850 Purchase Orders and validate 856 ASNs against retailer specs. Chargeback estimates, severity tags, CSV/PDF export. Free, no login.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://edi-preflight.fly.dev">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈</text></svg>">
+    <title>{% block title %}EDI Pre-flight — Free EDI Parser &amp; Validator{% endblock %}</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="/static/htmx.min.js"></script>
+    <!-- Google Analytics: replace GA_MEASUREMENT_ID with your actual ID -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
 </head>
 <body>
     <header>
@@ -20,6 +34,7 @@
     <footer>
         <div class="container">
             <p>Your documents are not stored. All processing happens in memory and is discarded after your session.</p>
+            <p>Built by <a href="mailto:msshawnp@gmail.com">Shawn P.</a> · <a href="mailto:msshawnp@gmail.com?subject=EDI%20Health%20Audit%20Inquiry">EDI Health Audit services</a></p>
         </div>
     </footer>
 </body>
