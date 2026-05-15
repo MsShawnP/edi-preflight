@@ -29,6 +29,16 @@ Each entry:
 - **Scope:** src/envelope.py — retailer detection logic
 - **Do not:** Require users to configure exact retailer IDs before using the tool
 
+### 2026-05-15 — All JavaScript must be in external files, never inline
+- **Why:** CSP `script-src 'self'` blocks inline `onclick` attributes and `<script>` blocks. This broke all interactive elements on the production site. External `.js` files served from `/static/` are allowed by `'self'`. Using `addEventListener` with `data-*` attributes instead of inline handlers.
+- **Scope:** All templates (base.html, index.html, any future templates)
+- **Do not:** Add inline `onclick`, `onsubmit`, or `<script>` blocks to templates. All JS goes in `/static/*.js`.
+
+### 2026-05-15 — Use CSS classes instead of inline style attributes for visibility
+- **Why:** CSP `style-src 'self'` (even with `'unsafe-inline'` added later as fallback) can strip inline `style` attributes. Using CSS classes for show/hide is CSP-safe and more maintainable.
+- **Scope:** All templates
+- **Do not:** Use `style="display: none"` or similar inline styles for layout control. Use CSS classes toggled by JavaScript.
+
 ---
 
 ## Data & Schema

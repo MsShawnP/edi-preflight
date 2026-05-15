@@ -78,3 +78,27 @@ quarto" or "scope, scrollytelling, decoration"]
 **Status:** Resolved
 
 **Tags:** edi, isa, padding, sample-data, incomplete-fix
+
+### 2026-05-15 — CSP blocked all inline JavaScript on production
+
+**Attempted:** Deployed with `Content-Security-Policy: script-src 'self'` while index.html still had inline `onclick` handlers and an inline `<script>` block containing `switchMode` and `loadSample` functions.
+
+**Why it didn't work:** `script-src 'self'` blocks ALL inline JavaScript — both `onclick="..."` attributes and `<script>` blocks without a nonce/hash. Every interactive element on the page was dead on arrival in production. The dev server didn't surface this because CSP violations are silent (no JS errors, just ignored handlers).
+
+**What we tried instead:** Externalized all JS to `/static/app.js` and `/static/ga.js`. Replaced `onclick` attributes with `data-*` attributes + `addEventListener` bindings. Moved `app.js` to end of `<body>` (no `defer`) so DOM is guaranteed parsed when bindings run.
+
+**Status:** Resolved
+
+**Tags:** csp, security-headers, inline-js, production-bug
+
+### 2026-05-15 — CSP style-src 'self' stripped inline style attributes
+
+**Attempted:** Outbound panel used `style="display: none;"` to hide it on page load. CSP had `style-src 'self'` without `'unsafe-inline'`.
+
+**Why it didn't work:** `style-src 'self'` blocks inline `style` attributes in HTML. The browser silently stripped `display: none`, making both panels visible simultaneously. The page appeared broken even after the inline JS fix because the layout was wrong.
+
+**What we tried instead:** Replaced `style="display: none;"` with a CSS class `.mode-panel-hidden { display: none; }`. Updated `switchMode()` to toggle the class instead of setting `element.style.display`. Added `'unsafe-inline'` to `style-src` as belt-and-suspenders.
+
+**Status:** Resolved
+
+**Tags:** csp, style-src, inline-styles, production-bug

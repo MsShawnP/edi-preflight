@@ -9,6 +9,46 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-05-15 — Milestones 7–9 complete, deployed, production bugs fixed
+
+**Phase:** Arc complete. All milestones done, deployed, production-verified.
+
+**Goal:** Execute Milestones 7 (pre-deploy hardening), 8 (product completion), 9 (code quality) from PLAN.md, deploy, fix production bugs.
+
+**Completed:**
+- Milestone 7: Input size limits (2MB), self-hosted HTMX, security headers middleware (CSP, nosniff, DENY, referrer-policy), sync endpoints, production-hardened FastAPI (no docs, non-root user, sanitized filenames, safe error messages).
+- Milestone 8: Lead-gen CTA on results pages, "Try a sample" buttons with auto-submit, SEO meta tags + favicon, responsive CSS breakpoints, Google Analytics with custom events.
+- Milestone 9: 23 endpoint tests, Walmart validator migrated to RetailerConfig (~280→~35 lines), 10 new validation rule tests, 5 new common validator tests, YAML rule files resolved (kept as reference docs), shared formatting utilities extracted, validation pipeline helper factored out, GitHub Actions CI, minor test fixes (Amazon assertion, imports, rename).
+- Deployed to edi-preflight.fly.dev via `flyctl deploy`.
+- Fixed two production CSP bugs: (1) inline JS blocked by `script-src 'self'` — externalized to app.js/ga.js with addEventListener bindings, (2) inline `style="display: none;"` stripped by `style-src 'self'` — replaced with CSS class. Added Cache-Control: no-cache for HTML.
+
+**Tried, didn't work:**
+- `DOMContentLoaded` wrapper for event binding — didn't fire reliably in preview tool. Solved by moving `<script>` to end of `<body>` without `defer`.
+- `htmx.trigger(form, 'submit')` for auto-submitting sample forms — doesn't trigger HTMX-intercepted submission. Solved with `button.click()`.
+- `style-src 'self'` silently stripped inline `style` attributes — not obvious because no JS errors, just broken layout.
+
+**State:** 297 tests passing. All PLAN.md tasks complete. Production live and verified working (tab switching, sample loading, parsing, validation all functional). Working tree clean.
+
+**Next concrete action:** Arc is complete. Potential follow-ups (all out of scope for this arc): content strategy/SEO, Cinderhaven case study, rate limiting based on traffic, custom domain.
+
+**Blockers:** None.
+
+**Key files touched this session:**
+- src/static/app.js — new (externalized JS)
+- src/static/ga.js — new (externalized GA)
+- src/templates/base.html — external script refs, removed inline JS
+- src/templates/index.html — data-* attributes, CSS class for panel hiding
+- src/static/style.css — .mode-panel-hidden class, responsive breakpoints, CTA styling
+- src/main.py — security headers, cache-control, validation pipeline helper, formatting imports
+- src/formatting.py — new (shared formatting utilities)
+- src/validate_856_walmart.py — rewritten to use RetailerConfig
+- tests/test_main.py — new (23 endpoint tests)
+- tests/test_validate_856.py — 10 new test classes
+- tests/test_validate_856_common.py — new
+- .github/workflows/ci.yml — new
+
+---
+
 ## 2026-05-14 — Project audit + cleanup
 
 **Phase:** Post-arc audit (all 6 milestones complete; this is a cleanup pass before deploy).
