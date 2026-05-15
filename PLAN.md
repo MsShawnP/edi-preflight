@@ -211,7 +211,7 @@ unless noted.
 - [x] All Milestone 8 items complete — tool can generate and measure
       leads
 - [x] All Milestone 9 items complete — code is clean and well-tested
-- [ ] Deployed and accessible at edi-preflight.fly.dev
+- [x] Deployed and accessible at edi-preflight.fly.dev
 - [x] 297 tests passing (up from 254)
 
 ---
