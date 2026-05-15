@@ -18,6 +18,7 @@ from reportlab.platypus import (
     Spacer,
 )
 
+from src.formatting import format_currency, format_edi_date
 from src.validate_856 import Finding, Severity, ValidationResult
 
 _STYLES = getSampleStyleSheet()
@@ -41,16 +42,6 @@ _SEVERITY_BG = {
 }
 
 
-def _format_date(value: str) -> str:
-    if len(value) == 8 and value.isdigit():
-        return f"{value[4:6]}/{value[6:8]}/{value[0:4]}"
-    return value
-
-
-def _currency(value: float) -> str:
-    return f"${value:,.2f}"
-
-
 def _build_header(result: ValidationResult, retailer_label: str) -> list:
     elements = []
 
@@ -68,7 +59,7 @@ def _build_header(result: ValidationResult, retailer_label: str) -> list:
     if bsn.get("shipment_id"):
         meta_parts.append(f"<b>Shipment:</b> {bsn['shipment_id']}")
     if bsn.get("date"):
-        meta_parts.append(f"<b>Ship Date:</b> {_format_date(bsn['date'])}")
+        meta_parts.append(f"<b>Ship Date:</b> {format_edi_date(bsn['date'])}")
     if bsn.get("purpose_code"):
         purpose_labels = {"00": "Original", "01": "Cancellation", "05": "Replace"}
         meta_parts.append(
@@ -99,7 +90,7 @@ def _build_header(result: ValidationResult, retailer_label: str) -> list:
 
         fee_part = ""
         if result.total_fees > 0:
-            fee_part = f" &nbsp;&nbsp;|&nbsp;&nbsp; Est. Chargebacks: <b>{_currency(result.total_fees)}</b>"
+            fee_part = f" &nbsp;&nbsp;|&nbsp;&nbsp; Est. Chargebacks: <b>{format_currency(result.total_fees)}</b>"
 
         elements.append(Paragraph(
             f"<b>{severity.label.upper()}</b> — {count} finding{'s' if count != 1 else ''} detected.{fee_part}",
@@ -148,7 +139,7 @@ def _build_findings_section(
 
         fee = ""
         if f.has_fee:
-            fee = f"{_currency(f.fee)}/{f.fee_per}"
+            fee = f"{format_currency(f.fee)}/{f.fee_per}"
 
         data.append([
             f.severity.label,
@@ -211,7 +202,7 @@ def _build_chargeback_table(result: ValidationResult) -> list:
         data.append([
             Paragraph(msg, small),
             f.severity.label,
-            _currency(f.fee),
+            format_currency(f.fee),
             f.fee_per,
         ])
 
@@ -219,7 +210,7 @@ def _build_chargeback_table(result: ValidationResult) -> list:
     data.append([
         "Total Estimated Chargebacks",
         "",
-        _currency(result.total_fees),
+        format_currency(result.total_fees),
         "",
     ])
 

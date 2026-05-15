@@ -4,7 +4,7 @@ from pathlib import Path
 
 from src.envelope import parse_envelope
 from src.validate_856 import validate_856, Severity
-from src.validate_856_walmart import validate_856_walmart, _validate_sscc18
+from src.validate_856_walmart import validate_856_walmart, validate_sscc18
 from src.x12_tokenizer import tokenize
 
 SAMPLES = Path(__file__).parent.parent / "samples" / "walmart"
@@ -129,27 +129,27 @@ class TestSSCC18Validation:
         # 0*3+0*1+6*3+1*1+4*3+1*1+4*3+1*1+0*3+0*1+0*3+0*1+1*3+2*1+3*3+4*1+5*3
         # = 0+0+18+1+12+1+12+1+0+0+0+0+3+2+9+4+15 = 78
         # check = (10 - 78%10) % 10 = (10-8)%10 = 2
-        assert _validate_sscc18("006141410000123452") is None
+        assert validate_sscc18("006141410000123452") is None
 
     def test_wrong_length_rejected(self):
-        error = _validate_sscc18("1234567890")
+        error = validate_sscc18("1234567890")
         assert error is not None
         assert "10 digits" in error
 
     def test_non_numeric_rejected(self):
-        error = _validate_sscc18("00614141ABCD123452")
+        error = validate_sscc18("00614141ABCD123452")
         assert error is not None
         assert "non-numeric" in error
 
     def test_bad_check_digit_rejected(self):
-        error = _validate_sscc18("006141410000123459")  # wrong last digit
+        error = validate_sscc18("006141410000123459")  # wrong last digit
         assert error is not None
         assert "check digit" in error
 
     def test_18_digit_all_zeros_valid_check(self):
         # 000000000000000000 — check digit computation
         # all zeros, sum = 0, check = 0
-        assert _validate_sscc18("000000000000000000") is None
+        assert validate_sscc18("000000000000000000") is None
 
 
 # --- Inline edge cases ---

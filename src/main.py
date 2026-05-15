@@ -17,6 +17,7 @@ from src.validate_856_costco import validate_856_costco
 from src.validate_856_kehe import validate_856_kehe
 from src.validate_856_unfi import validate_856_unfi
 from src.validate_856_walmart import validate_856_walmart
+from src.formatting import format_currency, format_edi_date, format_quantity
 from src.x12_tokenizer import TokenizeError, tokenize
 
 _SRC_DIR = Path(__file__).parent
@@ -61,27 +62,11 @@ _PURPOSE_LABELS = {
 }
 
 
-def _format_edi_date(value: str) -> str:
-    if len(value) == 8 and value.isdigit():
-        return f"{value[4:6]}/{value[6:8]}/{value[0:4]}"
-    return value
-
-
-def _format_currency(value: float) -> str:
-    return f"${value:,.2f}"
-
-
-def _format_quantity(value: float) -> str:
-    if value == int(value):
-        return str(int(value))
-    return f"{value:g}"
-
-
 _SAMPLES_DIR = _SRC_DIR.parent / "samples"
 
-templates.env.filters["edi_date"] = _format_edi_date
-templates.env.filters["currency"] = _format_currency
-templates.env.filters["qty"] = _format_quantity
+templates.env.filters["edi_date"] = format_edi_date
+templates.env.filters["currency"] = format_currency
+templates.env.filters["qty"] = format_quantity
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -173,6 +158,38 @@ async def parse_edi(
 
 def _safe_filename(value: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_-]", "", value)
+
+
+def _validate_856_or_error(edi_text: str, retailer: str = "auto"):
+    try:
+        tokens = tokenize(edi_text)
+        envelope = parse_envelope(tokens)
+    except (TokenizeError, EnvelopeError) as e:
+        return None, None, None, Response(
+            content=str(e), status_code=400, media_type="text/plain",
+        )
+    except Exception:
+        return None, None, None, Response(
+            content="An unexpected error occurred while processing the document.",
+            status_code=400,
+            media_type="text/plain",
+        )
+
+    result = validate_856(envelope)
+
+    detected = envelope.retailer
+    if retailer != "auto":
+        try:
+            detected = Retailer(retailer)
+        except ValueError:
+            pass
+
+    validator = _RETAILER_VALIDATORS.get(detected)
+    if validator:
+        result = validator(result)
+
+    retailer_label = _RETAILER_LABELS.get(detected, detected.value.title())
+    return result, retailer_label, detected, None
 
 
 def _extract_po_or_error(edi_text: str):
@@ -328,32 +345,10 @@ def export_validation_pdf_endpoint(
     edi_text: str = Form(""),
     retailer: str = Form("auto"),
 ):
-    try:
-        tokens = tokenize(edi_text)
-        envelope = parse_envelope(tokens)
-    except (TokenizeError, EnvelopeError) as e:
-        return Response(content=str(e), status_code=400, media_type="text/plain")
-    except Exception:
-        return Response(
-            content="An unexpected error occurred while processing the document.",
-            status_code=400,
-            media_type="text/plain",
-        )
+    result, retailer_label, detected, error = _validate_856_or_error(edi_text, retailer)
+    if error:
+        return error
 
-    result = validate_856(envelope)
-
-    detected = envelope.retailer
-    if retailer != "auto":
-        try:
-            detected = Retailer(retailer)
-        except ValueError:
-            pass
-
-    validator = _RETAILER_VALIDATORS.get(detected)
-    if validator:
-        result = validator(result)
-
-    retailer_label = _RETAILER_LABELS.get(detected, detected.value.title())
     pdf_bytes = export_validation_pdf(result, retailer_label)
 
     shipment_id = _safe_filename(result.bsn_data.get("shipment_id", ""))

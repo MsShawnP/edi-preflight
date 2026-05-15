@@ -18,7 +18,7 @@ from src.validate_856 import (
     Finding,
     Severity,
     ValidationResult,
-    _collect_all_nodes,
+    collect_all_nodes,
 )
 
 # Standard HL parent→child mapping (most retailers use this)
@@ -73,7 +73,7 @@ def _get_fee(config: RetailerConfig, rule_id: str) -> dict:
 
 def check_hl_hierarchy(result: ValidationResult, config: RetailerConfig) -> None:
     """Verify HL levels follow strict parent-child relationships."""
-    all_nodes = _collect_all_nodes(result.hl_tree)
+    all_nodes = collect_all_nodes(result.hl_tree)
 
     for node in all_nodes:
         if node.level_code not in config.valid_children:
@@ -118,7 +118,7 @@ def check_hl_hierarchy(result: ValidationResult, config: RetailerConfig) -> None
 
 def check_shipment_level(result: ValidationResult, config: RetailerConfig) -> None:
     """Check required segments at shipment level (S)."""
-    all_nodes = _collect_all_nodes(result.hl_tree)
+    all_nodes = collect_all_nodes(result.hl_tree)
     shipment_nodes = [n for n in all_nodes if n.level_code == "S"]
 
     for s_node in shipment_nodes:
@@ -175,7 +175,7 @@ def check_order_level(result: ValidationResult, config: RetailerConfig) -> None:
     if not config.require_prf:
         return
 
-    all_nodes = _collect_all_nodes(result.hl_tree)
+    all_nodes = collect_all_nodes(result.hl_tree)
     order_nodes = [n for n in all_nodes if n.level_code == "O"]
 
     for o_node in order_nodes:
@@ -199,7 +199,7 @@ def check_tare_level(result: ValidationResult, config: RetailerConfig) -> None:
     if not config.require_sscc18:
         return
 
-    all_nodes = _collect_all_nodes(result.hl_tree)
+    all_nodes = collect_all_nodes(result.hl_tree)
     tare_nodes = [n for n in all_nodes if n.level_code == "I"]
 
     for i_node in tare_nodes:
@@ -241,7 +241,7 @@ def check_pack_level(result: ValidationResult, config: RetailerConfig) -> None:
     if not config.check_catch_weight:
         return
 
-    all_nodes = _collect_all_nodes(result.hl_tree)
+    all_nodes = collect_all_nodes(result.hl_tree)
     pack_nodes = [n for n in all_nodes if n.level_code == "P"]
 
     for p_node in pack_nodes:

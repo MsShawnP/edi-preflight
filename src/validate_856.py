@@ -163,7 +163,7 @@ def _parse_hl_tree(segments: list[Segment]) -> list[HLNode]:
     return roots
 
 
-def _collect_all_nodes(roots: list[HLNode]) -> list[HLNode]:
+def collect_all_nodes(roots: list[HLNode]) -> list[HLNode]:
     """Flatten HL tree into a list in document order."""
     result: list[HLNode] = []
 
@@ -253,7 +253,7 @@ def _validate_structural(envelope: Envelope, result: ValidationResult) -> None:
     result.hl_tree = _parse_hl_tree(segments)
 
     # Check for shipment-level HL
-    all_nodes = _collect_all_nodes(result.hl_tree)
+    all_nodes = collect_all_nodes(result.hl_tree)
     shipment_nodes = [n for n in all_nodes if n.level_code == "S"]
     if not shipment_nodes:
         result.findings.append(Finding(

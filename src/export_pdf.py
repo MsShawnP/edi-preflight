@@ -13,28 +13,13 @@ from reportlab.platypus import (
 )
 
 from src.extract_850 import PurchaseOrder
+from src.formatting import format_currency, format_edi_date, format_quantity
 
 _STYLES = getSampleStyleSheet()
 
 _HEADER_BG = colors.HexColor("#4a7c9e")
 _LIGHT_GRAY = colors.HexColor("#f5f5f5")
 _BORDER = colors.HexColor("#dddddd")
-
-
-def _format_date(value: str) -> str:
-    if len(value) == 8 and value.isdigit():
-        return f"{value[4:6]}/{value[6:8]}/{value[0:4]}"
-    return value
-
-
-def _currency(value: float) -> str:
-    return f"${value:,.2f}"
-
-
-def _qty(value: float) -> str:
-    if value == int(value):
-        return str(int(value))
-    return f"{value:g}"
 
 
 def _build_header_section(po: PurchaseOrder) -> list:
@@ -50,7 +35,7 @@ def _build_header_section(po: PurchaseOrder) -> list:
     ))
 
     meta_parts = [
-        f"<b>Date:</b> {_format_date(po.po_date)}",
+        f"<b>Date:</b> {format_edi_date(po.po_date)}",
         f"<b>Type:</b> {po.po_type}",
     ]
     if po.department:
@@ -66,7 +51,7 @@ def _build_header_section(po: PurchaseOrder) -> list:
     if po.dates:
         for d in po.dates:
             elements.append(Paragraph(
-                f"<b>{d.label}:</b> {_format_date(d.date)}",
+                f"<b>{d.label}:</b> {format_edi_date(d.date)}",
                 _STYLES["Normal"],
             ))
         elements.append(Spacer(1, 8))
@@ -112,10 +97,10 @@ def _build_line_items_table(po: PurchaseOrder) -> list:
         data.append([
             item.line_number,
             Paragraph(desc, small),
-            _qty(item.quantity),
+            format_quantity(item.quantity),
             item.unit_of_measure,
-            _currency(item.unit_price),
-            _currency(item.quantity * item.unit_price),
+            format_currency(item.unit_price),
+            format_currency(item.quantity * item.unit_price),
             item.upc,
         ])
 
@@ -161,7 +146,7 @@ def _build_allowances_section(po: PurchaseOrder) -> list:
             "Allowance" if alw.is_allowance else "Charge",
             alw.code,
             alw.description,
-            _currency(alw.amount) if alw.amount else "",
+            format_currency(alw.amount) if alw.amount else "",
             f"{alw.percent}%" if alw.percent else "",
         ])
 
@@ -197,9 +182,9 @@ def _build_totals_section(po: PurchaseOrder) -> list:
     if po.total_line_items:
         parts.append(f"<b>Line Items:</b> {po.total_line_items}")
     if po.total_quantity:
-        parts.append(f"<b>Total Quantity:</b> {_qty(po.total_quantity)}")
+        parts.append(f"<b>Total Quantity:</b> {format_quantity(po.total_quantity)}")
     if po.total_amount:
-        parts.append(f"<b>Total Amount:</b> {_currency(po.total_amount)}")
+        parts.append(f"<b>Total Amount:</b> {format_currency(po.total_amount)}")
 
     elements.append(Paragraph(" &nbsp;&nbsp;|&nbsp;&nbsp; ".join(parts), _STYLES["Normal"]))
 

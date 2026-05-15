@@ -54,10 +54,8 @@ class TestMissingSSCC18Amazon:
         assert sscc_findings[0].layer == "retailer"
 
 
-class TestAmazonRetailerName:
-    def test_finding_messages_reference_amazon(self):
+class TestAmazonRetailerLayer:
+    def test_findings_are_tagged_as_retailer_layer(self):
         result = _load_and_validate("856_missing_sscc18.edi")
         retailer_findings = [f for f in result.findings if f.layer == "retailer"]
-        # At least one finding should reference Amazon in its message
-        amazon_refs = [f for f in retailer_findings if "Amazon" in f.message]
-        assert len(amazon_refs) > 0 or len(retailer_findings) > 0
+        assert len(retailer_findings) > 0, "Expected at least one finding in the retailer layer"

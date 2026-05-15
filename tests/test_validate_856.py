@@ -252,6 +252,206 @@ class TestInvalidSN1Quantity:
         assert len(qty_findings) == 1
 
 
+class TestNoTransactionSet:
+    def test_flags_empty_envelope(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        tokens = tokenize(raw)
+        envelope = parse_envelope(tokens)
+        result = validate_856(envelope)
+        findings = [f for f in result.findings if f.rule_id == "no_transaction_set"]
+        assert len(findings) == 1
+        assert findings[0].severity == Severity.BLOCKS_TRANSMISSION
+
+
+class TestWrongGSFunctionalId:
+    def test_flags_non_sh_functional_id(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*PO*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*00*SHP001*20260510*1430~"
+            "HL*1**S~"
+            "SE*3*0001~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        findings = [f for f in result.findings if f.rule_id == "wrong_gs_functional_id"]
+        assert len(findings) == 1
+        assert "PO" in findings[0].message
+
+
+class TestNoShipmentHL:
+    def test_flags_missing_shipment_level(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*00*SHP001*20260510*1430~"
+            "HL*1**O~"
+            "PRF*PO123~"
+            "SE*4*0001~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        findings = [f for f in result.findings if f.rule_id == "no_shipment_hl"]
+        assert len(findings) == 1
+        assert findings[0].severity == Severity.BLOCKS_TRANSMISSION
+
+
+class TestGSGEMismatch:
+    def test_flags_gs_ge_control_mismatch(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*00*SHP001*20260510*1430~"
+            "HL*1**S~"
+            "SE*3*0001~"
+            "GE*1*99~"
+            "IEA*1*000000001~"
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        findings = [f for f in result.findings if f.rule_id == "gs_ge_mismatch"]
+        assert len(findings) == 1
+        assert findings[0].severity == Severity.BLOCKS_TRANSMISSION
+
+
+class TestSECountMismatch:
+    def test_flags_wrong_segment_count(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*00*SHP001*20260510*1430~"
+            "HL*1**S~"
+            "SE*99*0001~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        findings = [f for f in result.findings if f.rule_id == "se_count_mismatch"]
+        assert len(findings) == 1
+        assert findings[0].severity == Severity.MAY_CAUSE_CHARGEBACK
+
+
+class TestMissingBSNShipmentId:
+    def test_flags_empty_shipment_id(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*00**20260510*1430~"
+            "HL*1**S~"
+            "SE*3*0001~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        findings = [f for f in result.findings if f.rule_id == "missing_bsn_shipment_id"]
+        assert len(findings) == 1
+        assert findings[0].element_id == "BSN02"
+
+
+class TestInvalidBSNTime:
+    def test_flags_bad_time_format(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*00*SHP001*20260510*9999~"
+            "HL*1**S~"
+            "SE*3*0001~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        findings = [f for f in result.findings if f.rule_id == "invalid_bsn_time"]
+        assert len(findings) == 1
+        assert "9999" in findings[0].message
+
+
+class TestInvalidTransportMethod:
+    def test_flags_unknown_transport_code(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*00*SHP001*20260510*1430~"
+            "HL*1**S~"
+            "TD5*B*2*UPSN*Z~"
+            "SE*4*0001~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        findings = [f for f in result.findings if f.rule_id == "invalid_transport_method"]
+        assert len(findings) == 1
+        assert findings[0].severity == Severity.COSMETIC
+
+
+class TestInvalidMANQualifier:
+    def test_flags_bad_man_qualifier(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*00*SHP001*20260510*1430~"
+            "HL*1**S~"
+            "HL*2*1*O~"
+            "PRF*PO123~"
+            "HL*3*2*I~"
+            "MAN*ZZ*001234567890123456~"
+            "SE*7*0001~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        findings = [f for f in result.findings if f.rule_id == "invalid_man_qualifier"]
+        assert len(findings) == 1
+        assert "ZZ" in findings[0].message
+
+
+class TestMissingSN1UOM:
+    def test_flags_missing_unit_of_measure(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*00*SHP001*20260510*1430~"
+            "HL*1**S~"
+            "HL*2*1*O~"
+            "PRF*PO123~"
+            "HL*3*2*I~"
+            "MAN*GM*001234567890123456~"
+            "HL*4*3*P~"
+            "SN1*1*48~"
+            "SE*9*0001~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        findings = [f for f in result.findings if f.rule_id == "missing_sn1_uom"]
+        assert len(findings) == 1
+        assert findings[0].element_id == "SN103"
+
+
 class TestSortedFindings:
     def test_sorted_by_severity_order(self):
         raw = (
