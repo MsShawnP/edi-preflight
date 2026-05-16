@@ -68,6 +68,20 @@ Each entry:
 
 ---
 
+## Third-Party Integrations
+
+### 2026-05-16 — Use business identity in all public-facing assets
+- **Why:** Personal Gmail and "Shawn P." attribution undercuts professional positioning for prospect-facing tools. Consistent company identity builds credibility.
+- **Scope:** All CTAs, footers, README attributions, and contact links across Lailara projects.
+- **Do not:** Use personal email addresses in client-facing or prospect-facing tools.
+
+### 2026-05-16 — Remove analytics until properly configured
+- **Why:** A placeholder `GA_MEASUREMENT_ID` in page source signals "unfinished" to technical reviewers. No analytics is invisible; broken analytics is visible.
+- **Scope:** Any third-party script integration (analytics, chat widgets, etc.)
+- **Do not:** Ship script tags with placeholder IDs or "replace this" comments.
+
+---
+
 ## Reversed / Superseded
 
 When a decision is overturned:
