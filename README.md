@@ -1,5 +1,7 @@
 # EDI Preflight
 
+[![CI](https://github.com/MsShawnP/edi-preflight/actions/workflows/ci.yml/badge.svg)](https://github.com/MsShawnP/edi-preflight/actions/workflows/ci.yml)
+
 A free web tool for specialty food brands doing EDI by hand. Parses
 inbound Purchase Orders and validates outbound Advance Ship Notices
 against retailer-specific specs, with chargeback-dollar attribution.
@@ -104,4 +106,4 @@ Live at [edi-preflight.fly.dev](https://edi-preflight.fly.dev).
 
 ---
 
-A [Lailara LLC](https://github.com/MsShawnP) portfolio piece.
+Built by [Lailara LLC](https://github.com/MsShawnP).

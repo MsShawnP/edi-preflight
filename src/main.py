@@ -34,10 +34,9 @@ async def security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' https://www.googletagmanager.com; "
-        "img-src 'self' data: https://www.google-analytics.com; "
-        "connect-src 'self' https://www.google-analytics.com https://analytics.google.com; "
-        "style-src 'self' 'unsafe-inline'"
+        "script-src 'self'; "
+        "img-src 'self' data:; "
+        "style-src 'self'"
     )
     if response.headers.get("content-type", "").startswith("text/html"):
         response.headers["Cache-Control"] = "no-cache"
