@@ -9,15 +9,15 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
-## 2026-05-20 11:00
+## 2026-05-20 11:15
 
-**What changed:** Applied Lailara design system — self-hosted Playfair Display + Source Sans 3, full CSS rewrite with `--ll-*` tokens, warm canvas, Chicago-20 navy accent, Economist-style tables, severity badges mapped to Lailara color families.
+**Started from:** Arc complete (all 9 milestones done, 297 tests, deployed). No active PLAN.md arc. User requested applying the Lailara brand kit.
 
-**Why:** The tool was using generic system fonts and ad-hoc colors. Applying the brand kit makes it visually consistent with other Lailara portfolio pieces and prospect-ready.
+**Did:** Applied full Lailara Design System v2 — self-hosted Playfair Display + Source Sans 3 fonts, complete CSS rewrite with `--ll-*` token system, warm canvas (`#f5f3ee`), Chicago-20 navy accent, Economist-style tables (navy headers, alternating rows), severity badges mapped to Lailara color families, Red-42 tab accent, hairline card borders. Verified all views in browser. Synced with 3 upstream commits via stash/pop.
 
-**State:** 297 tests passing. All visuals verified in browser (landing, 850 results, 856 validation). Committed and pushed. Production not yet redeployed with this change.
+**State:** 297 tests passing. Design system applied and verified. Pushed to GitHub. Production NOT yet redeployed — still shows old styling.
 
-**Next:** Redeploy to Fly.io to take the design system live in production.
+**Next:** Redeploy to Fly.io (`flyctl deploy`) to take Lailara design system live. Then decide next arc — content strategy/SEO or another project.
 
 ---
 
