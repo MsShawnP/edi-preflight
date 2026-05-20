@@ -9,6 +9,18 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-05-20 11:00
+
+**What changed:** Applied Lailara design system — self-hosted Playfair Display + Source Sans 3, full CSS rewrite with `--ll-*` tokens, warm canvas, Chicago-20 navy accent, Economist-style tables, severity badges mapped to Lailara color families.
+
+**Why:** The tool was using generic system fonts and ad-hoc colors. Applying the brand kit makes it visually consistent with other Lailara portfolio pieces and prospect-ready.
+
+**State:** 297 tests passing. All visuals verified in browser (landing, 850 results, 856 validation). Committed and pushed. Production not yet redeployed with this change.
+
+**Next:** Redeploy to Fly.io to take the design system live in production.
+
+---
+
 ## 2026-05-16 14:30 — Pre-prospect audit and polish
 
 **Started from:** Arc complete (2026-05-15). All milestones done, deployed, 297 tests passing. No active work.
