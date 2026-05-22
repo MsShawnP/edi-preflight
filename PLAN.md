@@ -203,7 +203,6 @@ unless noted.
 - Custom domain setup
 - Client-specific local deliverable tooling
 - Rate limiting (evaluate after deploy based on actual traffic)
-- Content strategy / SEO content (separate arc)
 
 ## Definition of done for this arc
 

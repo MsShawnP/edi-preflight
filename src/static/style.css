@@ -759,56 +759,6 @@ button[type="submit"]:focus-visible {
     font-style: italic;
 }
 
-/* ── CTA section ───────────────────────────────────────────── */
-
-.cta-section {
-    margin-top: 32px;
-    background: var(--ll-chicago-95);
-    border: 1px solid var(--ll-chicago-85);
-    border-radius: var(--ll-radius);
-    padding: 24px;
-    text-align: center;
-}
-
-.cta-section h3 {
-    margin: 0 0 8px;
-    font-family: var(--ll-serif);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--ll-london-5);
-    border: none;
-    padding: 0;
-}
-
-.cta-section p {
-    margin: 0 0 16px;
-    color: var(--ll-london-35);
-    font-size: 15px;
-    max-width: 660px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.btn-cta {
-    display: inline-block;
-    background: var(--ll-chicago-20);
-    color: #fff;
-    padding: 8px 20px;
-    border-radius: var(--ll-radius);
-    text-decoration: none;
-    font-family: var(--ll-sans);
-    font-size: 14px;
-    font-weight: 600;
-    height: 36px;
-}
-
-.btn-cta:hover { background: var(--ll-chicago-10); }
-
-.btn-cta:focus-visible {
-    outline: 2px solid var(--ll-london-5);
-    outline-offset: 2px;
-}
-
 /* ── Responsive ────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
@@ -843,7 +793,7 @@ button[type="submit"]:focus-visible {
 
 @media print {
     body { background: #fff; }
-    header, footer, .export-bar, .form-actions, .try-sample, .cta-section, .mode-tabs { display: none; }
+    header, footer, .export-bar, .form-actions, .try-sample, .mode-tabs { display: none; }
     .mode-panel-hidden { display: block; }
     @page { size: letter; margin: 0.6in; }
 }

@@ -9,6 +9,16 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-05-22 — Redeployed with Lailara design system
+
+**Did:** Ran `flyctl deploy`. Lailara Design System v2 is now live at edi-preflight.fly.dev.
+
+**State:** 297 tests passing. Production matches GitHub main. All arc work complete.
+
+**Next:** Decide next arc or move to another project.
+
+---
+
 ## 2026-05-20 11:15
 
 **Started from:** Arc complete (all 9 milestones done, 297 tests, deployed). No active PLAN.md arc. User requested applying the Lailara brand kit.
