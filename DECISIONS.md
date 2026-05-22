@@ -80,6 +80,11 @@ Each entry:
 - **Scope:** Any third-party script integration (analytics, chat widgets, etc.)
 - **Do not:** Ship script tags with placeholder IDs or "replace this" comments.
 
+### 2026-05-22 — Lead generation handled outside edi-preflight
+- **Why:** User decided to handle lead gen differently rather than embedding CTAs in the free tool.
+- **Scope:** All edi-preflight UI and content.
+- **Do not:** Re-add lead-gen CTAs, gating, or audit-service upsells to the tool without explicit decision to reverse this.
+
 ---
 
 ## Reversed / Superseded

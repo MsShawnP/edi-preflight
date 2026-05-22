@@ -9,13 +9,15 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
-## 2026-05-22 — Redeployed with Lailara design system
+## 2026-05-22 — Deploy + CTA removal
 
-**Did:** Ran `flyctl deploy`. Lailara Design System v2 is now live at edi-preflight.fly.dev.
+**Started from:** Arc complete, Lailara design system applied but not yet deployed.
 
-**State:** 297 tests passing. Production matches GitHub main. All arc work complete.
+**Did:** Redeployed to Fly.io with Lailara design system. Removed lead-gen CTA from both result pages, footer, and all related CSS (~50 lines). User will handle lead generation separately from this tool. Removed content strategy/SEO from project scope.
 
-**Next:** Decide next arc or move to another project.
+**State:** 297 tests passing. Production matches GitHub main. No active PLAN.md arc. Project is a clean portfolio piece.
+
+**Next:** No active arc. May return for custom domain, Cinderhaven case study, or rate limiting — or move to a different project.
 
 ---
 
