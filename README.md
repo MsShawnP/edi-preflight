@@ -6,7 +6,7 @@ A free web tool for specialty food brands doing EDI by hand. Parses
 inbound Purchase Orders and validates outbound Advance Ship Notices
 against retailer-specific specs, with chargeback-dollar attribution.
 
-**[Use the tool](https://edi-preflight.fly.dev)**
+**[Use the tool](https://edi.lailarallc.com)**
 
 ## What this does
 
@@ -102,7 +102,7 @@ HTTP endpoints.
 flyctl deploy
 ```
 
-Live at [edi-preflight.fly.dev](https://edi-preflight.fly.dev).
+Live at [edi.lailarallc.com](https://edi.lailarallc.com).
 
 ---
 
