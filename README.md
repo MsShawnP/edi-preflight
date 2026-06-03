@@ -74,12 +74,11 @@ tests/                 19 test modules, 297 tests
 Dockerfile             Python 3.13-slim, non-root user
 fly.toml               Fly.io deployment config
 pyproject.toml         Dependencies and project metadata
-```
-
-
+```\n
 ## Data contract
 
 Canonical Cinderhaven conformance — 50 SKUs across 5 product lines and 6 contracted retailers.
+
 ## Run locally
 
 ```
