@@ -39,6 +39,8 @@ to PDF.
 **Stateless.** Documents are processed in memory and discarded. Nothing
 is stored.
 
+**Cinderhaven context:** Built on the Cinderhaven synthetic dataset — a ~$25M specialty food brand, 50 SKUs across 5 product lines and 6 contracted retailers. Data is synthetic; methodology and deliverables are real.
+
 ## Tech stack
 
 - **Backend** -- Python, FastAPI, Jinja2 server-side templates
@@ -74,6 +76,10 @@ fly.toml               Fly.io deployment config
 pyproject.toml         Dependencies and project metadata
 ```
 
+
+## Data contract
+
+Canonical Cinderhaven conformance — 50 SKUs across 5 product lines and 6 contracted retailers.
 ## Run locally
 
 ```
@@ -105,5 +111,4 @@ flyctl deploy
 Live at [edi.lailarallc.com](https://edi.lailarallc.com).
 
 ---
-
-Built by [Lailara LLC](https://github.com/MsShawnP).
+Built by [Lailara LLC](https://lailarallc.com) — data hygiene and analytics consulting for specialty food brands scaling into national retail.
