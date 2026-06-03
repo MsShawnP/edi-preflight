@@ -41,7 +41,7 @@ use the fictional company "Cinderhaven Foods" as the sender/supplier.
 
 ## Using these samples
 
-Paste any sample into the web tool at edi-preflight.fly.dev to see it
+Paste any sample into the web tool at edi.lailarallc.com to see it
 parsed (850) or validated (856). The 856 error samples demonstrate the
 three-layer validation report with severity badges and chargeback estimates.
 

@@ -55,7 +55,7 @@ For things that didn't work, see FAILURES.md.
 - Milestone 7: Input size limits (2MB), self-hosted HTMX, security headers middleware (CSP, nosniff, DENY, referrer-policy), sync endpoints, production-hardened FastAPI (no docs, non-root user, sanitized filenames, safe error messages).
 - Milestone 8: Lead-gen CTA on results pages, "Try a sample" buttons with auto-submit, SEO meta tags + favicon, responsive CSS breakpoints, Google Analytics with custom events.
 - Milestone 9: 23 endpoint tests, Walmart validator migrated to RetailerConfig (~280→~35 lines), 10 new validation rule tests, 5 new common validator tests, YAML rule files resolved (kept as reference docs), shared formatting utilities extracted, validation pipeline helper factored out, GitHub Actions CI, minor test fixes (Amazon assertion, imports, rename).
-- Deployed to edi-preflight.fly.dev via `flyctl deploy`.
+- Deployed to edi.lailarallc.com via `flyctl deploy`.
 - Fixed two production CSP bugs: (1) inline JS blocked by `script-src 'self'` — externalized to app.js/ga.js with addEventListener bindings, (2) inline `style="display: none;"` stripped by `style-src 'self'` — replaced with CSS class. Added Cache-Control: no-cache for HTML.
 
 **Tried, didn't work:**
@@ -97,7 +97,7 @@ For things that didn't work, see FAILURES.md.
 - Rewrote README.md. Was stuck on "Early development. Not yet functional." despite 23/23 tasks done; replaced with a real description, local-run instructions, repo layout, and deploy note.
 - Added `_extract_po_or_error` helper in `src/main.py` and wrapped `/export/csv`, `/export/pdf`, `/export/validation-pdf` with the same try/except behavior `/parse` and `/validate` had. Bad input to an export endpoint now returns 400 + plain text instead of a 500 stack trace.
 - Tightened the Dockerfile comment to explicitly call out that the inlined deps must stay in sync with `pyproject.toml [project].dependencies`. Kept the inline approach — switching to `pip install .` would require adding a build-system and packaging `src/`, disproportionate for today's drift risk.
-- Marked the PLAN.md "Definition of done" rollup checkboxes that were already met by completed tasks. Left the "Deployed to edi-preflight.fly.dev" box unchecked — deploy config shipped, `flyctl deploy` has not actually run.
+- Marked the PLAN.md "Definition of done" rollup checkboxes that were already met by completed tasks. Left the "Deployed to edi.lailarallc.com" box unchecked — deploy config shipped, `flyctl deploy` has not actually run.
 - Branch: `claude/audit-project-1Kvd1`. Commit `4516195` pushed.
 
 **Tried, didn't work:**
@@ -106,7 +106,7 @@ For things that didn't work, see FAILURES.md.
 
 **State:** 254 tests passing. Working tree clean. Audit branch pushed but no PR opened (user hasn't asked).
 
-**Next concrete action:** Decide whether to merge `claude/audit-project-1Kvd1` to main, then run `flyctl deploy` to take the tool live at edi-preflight.fly.dev.
+**Next concrete action:** Decide whether to merge `claude/audit-project-1Kvd1` to main, then run `flyctl deploy` to take the tool live at edi.lailarallc.com.
 
 **Blockers:** None for merge. Deploy still requires Fly.io account + flyctl CLI on the operator's machine.
 
@@ -140,7 +140,7 @@ For things that didn't work, see FAILURES.md.
 
 **State:** All 6 milestones complete (23/23 tasks done). 254 tests passing. Branch `claude/sweet-wescoff-9fbcc7` is 7 commits ahead of origin/main. Working tree clean.
 
-**Next concrete action:** Push branch, create PR, then `flyctl deploy` to go live at edi-preflight.fly.dev. After deploy, verify both modes work in production. Consider the Cinderhaven case study as a follow-on content piece (out of scope for this arc).
+**Next concrete action:** Push branch, create PR, then `flyctl deploy` to go live at edi.lailarallc.com. After deploy, verify both modes work in production. Consider the Cinderhaven case study as a follow-on content piece (out of scope for this arc).
 
 **Blockers:** None. Deployment requires Fly.io account + flyctl CLI.
 

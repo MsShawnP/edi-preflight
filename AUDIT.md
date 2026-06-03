@@ -9,7 +9,7 @@ Audited: 2026-05-16 (fresh audit, prospect review imminent)
 **Date:** 2026-05-16
 **Project:** edi-preflight
 **Repo:** github.com/MsShawnP/edi-preflight
-**Live:** edi-preflight.fly.dev
+**Live:** edi.lailarallc.com
 
 ### What Was Intended
 
@@ -100,7 +100,7 @@ since the measurement ID is a placeholder, the CSP is permitting
 third-party scripts that serve no purpose. Either configure GA or
 remove the CSP exceptions and script tags until you do.
 
-**Gap 6 — No custom domain.** The tool lives at `edi-preflight.fly.dev`.
+**Gap 6 — No custom domain.** The tool lives at `edi.lailarallc.com`.
 The README and OG tags reference this URL. A `.com` or branded
 subdomain would be stronger for prospect presentation, but this was
 explicitly marked out of scope.
