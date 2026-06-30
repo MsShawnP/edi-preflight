@@ -27,3 +27,10 @@ Thumbs.db
 
 # Project
 .claude-project-url
+
+# Security - secret leak prevention
+.env.*
+*.pem
+*.key
+credentials.*
+secrets.*

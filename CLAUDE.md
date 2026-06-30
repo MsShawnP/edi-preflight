@@ -148,3 +148,5 @@ Format as a clearly separated note. Do not nag.
 - Default to asking before promoting a log entry to a DECISIONS.md
   entry
 - Default to answering, not offering to answer
+
+Never write secrets, tokens, or passwords into tracked files, READMEs, or commit messages — use environment variables and secret stores only.
