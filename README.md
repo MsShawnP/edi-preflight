@@ -2,27 +2,15 @@
 
 [![CI](https://github.com/MsShawnP/edi-preflight/actions/workflows/ci.yml/badge.svg)](https://github.com/MsShawnP/edi-preflight/actions/workflows/ci.yml)
 
-A free web tool for specialty food brands doing EDI by hand. Parses
-inbound Purchase Orders and validates outbound Advance Ship Notices
-against retailer-specific specs, with chargeback-dollar attribution.
+A free web tool that catches EDI errors before they become retailer chargebacks. Parses inbound 850 Purchase Orders and validates outbound 856 Advance Ship Notices against retailer-specific specs, with chargeback-dollar attribution.
 
 **Live:** https://edi.lailarallc.com
 
-## What this does
+## What it does
 
-Specialty food manufacturers in the $15M--$30M range often process
-EDI documents manually -- keying line items from 850 Purchase Orders
-into spreadsheets, assembling 856 ASNs by hand, and hoping nothing
-triggers a chargeback. EDI Preflight handles both sides of that
-problem.
+**Inbound 850 parser.** Paste or upload a raw X12 850 Purchase Order. The tool extracts the PO header, line items, allowances, ship-to addresses, catch-weight flags, dates, terms, and totals into a structured table. Export to CSV (for ERP import) or a formatted PDF.
 
-**Inbound 850 parser.** Paste or upload a raw X12 850. The tool
-extracts PO header, line items, allowances, ship-to addresses,
-catch-weight flags, dates, terms, and totals into a structured table.
-Export to CSV (for ERP import) or a formatted PDF.
-
-**Outbound 856 validator.** Paste or upload a raw X12 856, select a
-retailer, and get a three-layer validation report:
+**Outbound 856 validator.** Paste or upload a raw X12 856 Advance Ship Notice, select a retailer, and get a three-layer validation report:
 
 | Layer | What it checks |
 |---|---|
@@ -30,28 +18,57 @@ retailer, and get a three-layer validation report:
 | Field-level | Date formats, SSCC-18 check digits, weight/measure units |
 | Retailer-specific | Spec requirements unique to each trading partner |
 
-Every finding is tagged with a severity level and, where applicable,
-the chargeback dollar amount the retailer would assess. Results export
-to PDF.
+Every finding is tagged with a severity level and, where applicable, the chargeback dollar amount the retailer would assess. Results export to PDF.
 
 **Supported retailers:** Walmart, Amazon, UNFI, KeHE, Costco.
 
-**Stateless.** Documents are processed in memory and discarded. Nothing
-is stored.
+**Stateless.** Documents are processed in memory and discarded. Nothing is stored.
+
+## Why it matters
+
+Specialty food manufacturers in the $15M–$30M range often process EDI documents manually — keying line items from 850 Purchase Orders into spreadsheets, assembling 856 ASNs by hand, and hoping nothing triggers a chargeback. A single non-compliant ASN can cost hundreds of dollars per shipment in retailer penalties, and manual re-keying of POs burns operations hours every week.
+
+EDI Preflight handles both sides of that problem: it turns raw PO files into clean, ERP-ready data, and it flags ASN errors — priced in chargeback dollars — before the document ever reaches the retailer.
 
 **Cinderhaven context:** Built on the Cinderhaven synthetic dataset — a ~$25M specialty food brand, 50 SKUs across 5 product lines and 6 contracted retailers. Data is synthetic; methodology and deliverables are real.
 
+## Quick start
+
+Requires Python 3.11+.
+
+```
+pip install -e ".[dev]"
+uvicorn src.main:app --reload
+```
+
+Opens at `http://localhost:8000`. No database, no external services.
+
+**Tests:**
+
+```
+pytest
+```
+
+297 tests covering tokenization, envelope parsing, 850 extraction (all 5 retailers), 856 validation (structural, field-level, and retailer-specific rules), CSV/PDF export, input validation, and all HTTP endpoints.
+
+**Deploy:** `Dockerfile` and `fly.toml` are configured for Fly.io:
+
+```
+flyctl deploy
+```
+
+Live at [edi.lailarallc.com](https://edi.lailarallc.com).
+
 ## Tech stack
 
-- **Backend** -- Python, FastAPI, Jinja2 server-side templates
-- **Frontend** -- HTMX (self-hosted), vanilla CSS
-- **PDF export** -- ReportLab
-- **Parser** -- custom X12 tokenizer and extraction pipeline (no
-  external EDI library)
-- **Hosting** -- Fly.io (shared-cpu-1x, 256 MB, SEA region)
-- **CI** -- GitHub Actions (`pytest` on push and PR to main)
+- **Backend** — Python, FastAPI, Jinja2 server-side templates
+- **Frontend** — HTMX (self-hosted), vanilla CSS
+- **PDF export** — ReportLab
+- **Parser** — custom X12 tokenizer and extraction pipeline (no external EDI library)
+- **Hosting** — Fly.io (shared-cpu-1x, 256 MB, SEA region)
+- **CI** — GitHub Actions (`pytest` on push and PR to main)
 
-## Repository structure
+## Project structure
 
 ```
 src/                   FastAPI app, parser, validators, exporters
@@ -74,40 +91,11 @@ tests/                 19 test modules, 297 tests
 Dockerfile             Python 3.13-slim, non-root user
 fly.toml               Fly.io deployment config
 pyproject.toml         Dependencies and project metadata
-```\n
-## Data contract
-
-Canonical Cinderhaven conformance — 50 SKUs across 5 product lines and 6 contracted retailers.
-
-## Run locally
-
-```
-pip install -e ".[dev]"
-uvicorn src.main:app --reload
 ```
 
-Opens at `http://localhost:8000`. No database, no external services.
+## License
 
-## Tests
-
-```
-pytest
-```
-
-297 tests covering tokenization, envelope parsing, 850 extraction
-(all 5 retailers), 856 validation (structural, field-level, and
-retailer-specific rules), CSV/PDF export, input validation, and all
-HTTP endpoints.
-
-## Deploy
-
-`Dockerfile` and `fly.toml` are configured for Fly.io:
-
-```
-flyctl deploy
-```
-
-Live at [edi.lailarallc.com](https://edi.lailarallc.com).
+MIT — see [LICENSE](LICENSE).
 
 ---
 Built by [Lailara LLC](https://lailarallc.com) — data hygiene and analytics consulting for specialty food brands scaling into national retail.
