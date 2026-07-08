@@ -23,6 +23,8 @@ _FEES = {
 _CONFIG = RetailerConfig(
     name="Amazon",
     fees=_FEES,
+    # Amazon accepts Original and Replace (see rules/amazon_856.yaml BSN01).
+    allowed_bsn_purpose_codes={"00", "05"},
 )
 
 

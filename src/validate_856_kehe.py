@@ -23,6 +23,8 @@ _FEES = {
 _CONFIG = RetailerConfig(
     name="KeHE",
     fees=_FEES,
+    # KeHE accepts Original only (see rules/kehe_856.yaml BSN01).
+    allowed_bsn_purpose_codes={"00"},
 )
 
 

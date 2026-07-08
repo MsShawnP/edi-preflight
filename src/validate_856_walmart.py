@@ -25,6 +25,8 @@ _FEES = {
 _CONFIG = RetailerConfig(
     name="Walmart",
     fees=_FEES,
+    # Walmart accepts Original, Cancellation, Replace (rules/walmart_856.yaml).
+    allowed_bsn_purpose_codes={"00", "01", "05"},
 )
 
 

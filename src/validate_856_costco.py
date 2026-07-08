@@ -24,6 +24,8 @@ _FEES = {
 _CONFIG = RetailerConfig(
     name="Costco",
     fees=_FEES,
+    # Costco accepts Original only (see rules/costco_856.yaml BSN01).
+    allowed_bsn_purpose_codes={"00"},
 )
 
 
