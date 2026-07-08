@@ -202,6 +202,36 @@ class TestCatchWeightPO:
         assert self.po.total_line_items == 3
 
 
+class TestImpliedDecimalAllowance:
+    """SAC05 is an X12 N2 field (two implied decimals)."""
+
+    def _extract(self, sac_amount: str):
+        edi = (
+            "ISA*00*          *00*          *ZZ*WALMART        *ZZ*CINDERHAVEN    "
+            "*260510*0900*U*00501*000000009*0*P*>~"
+            "GS*PO*WALMART*CINDERHAVEN*20260510*090000*9*X*005010~"
+            "ST*850*0001~"
+            "BEG*00*SA*4500099999**20260510~"
+            f"SAC*C*D240***{sac_amount}~"
+            "PO1*1*10*CS*24.99*QE*IN*0078742031234~"
+            "CTT*1~"
+            "SE*6*0001~"
+            "GE*1*9~"
+            "IEA*1*000000009~"
+        )
+        envelope = parse_envelope(tokenize(edi))
+        return extract_850(envelope)
+
+    def test_implied_decimals_scaled(self):
+        # "12500" with no decimal point is $125.00, not $12,500.00.
+        po = self._extract("12500")
+        assert po.header_allowances[0].amount == 125.00
+
+    def test_explicit_decimal_point_is_preserved(self):
+        po = self._extract("125.00")
+        assert po.header_allowances[0].amount == 125.00
+
+
 class TestExtractionErrors:
     def test_non_850_raises(self):
         edi = (

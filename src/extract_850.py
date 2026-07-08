@@ -142,6 +142,24 @@ def _parse_float(value: str) -> float:
         return 0.0
 
 
+def _parse_n2(value: str) -> float:
+    """Parse an X12 N2 numeric (two implied decimal places).
+
+    Per X12, an explicitly transmitted decimal point overrides the implied
+    decimals, so "125.00" stays 125.00 while a compliant "12500" (no point)
+    is 125.00 rather than 12,500.00.
+    """
+    value = value.strip()
+    if not value:
+        return 0.0
+    if "." in value:
+        return _parse_float(value)
+    try:
+        return int(value) / 100.0
+    except ValueError:
+        return _parse_float(value)
+
+
 def _extract_product_ids(po1: Segment) -> dict[str, str]:
     """Extract qualifier/value pairs from PO106+ (pairs at positions 6/7, 8/9, etc.)."""
     ids: dict[str, str] = {}
@@ -159,7 +177,7 @@ def _parse_allowance(sac: Segment, level: str = "header") -> Allowance:
     return Allowance(
         indicator=sac.element(1).strip(),
         code=sac.element(2).strip(),
-        amount=_parse_float(sac.element(5)),
+        amount=_parse_n2(sac.element(5)),  # SAC05 is N2 (implied 2 decimals)
         percent=_parse_float(sac.element(7)),
         handling_code=sac.element(12).strip(),
         description=sac.element(15).strip(),
