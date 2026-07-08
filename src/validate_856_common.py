@@ -1,10 +1,10 @@
 """Shared 856 ASN retailer validation logic.
 
 Common checks used by all retailer-specific validators:
-- HL loop hierarchy (S→O→I→P)
-- SSCC-18 barcode validation
+- HL loop hierarchy (X12 735: Shipment→Order→Tare→Pack→Item)
+- SSCC-18 barcode validation (MAN at the Pack/Tare container levels)
 - Required segments per HL level
-- Catch-weight MEA*WT enforcement
+- Catch-weight MEA*WT enforcement (SN1 item detail at the Item level)
 
 Each retailer module provides its own fee schedule and retailer name,
 then calls run_retailer_checks() to apply the common rules.
@@ -21,12 +21,16 @@ from src.validate_856 import (
     collect_all_nodes,
 )
 
-# Standard HL parent→child mapping (most retailers use this)
+# Standard HL parent→child mapping (most retailers use this).
+# X12 element 735 nesting is Shipment(S)→Order(O)→Tare(T)→Pack(P)→Item(I).
+# Tare is optional: an Order may nest Packs directly when there is no
+# pallet/tare level, so both O→T→P and O→P are valid.
 STANDARD_VALID_CHILDREN = {
     "S": {"O"},
-    "O": {"I"},
-    "I": {"P"},
-    "P": set(),
+    "O": {"T", "P"},
+    "T": {"P"},
+    "P": {"I"},
+    "I": set(),
 }
 
 
@@ -36,6 +40,7 @@ class RetailerConfig:
     name: str
     fees: dict[str, dict]
     valid_children: dict[str, set[str]] = field(default_factory=lambda: dict(STANDARD_VALID_CHILDREN))
+    allowed_bsn_purpose_codes: set[str] = field(default_factory=lambda: {"00", "01", "05"})
     require_sscc18: bool = True
     require_td5: bool = True
     require_dtm_011: bool = True
@@ -81,7 +86,7 @@ def check_hl_hierarchy(result: ValidationResult, config: RetailerConfig) -> None
                 rule_id="unknown_hl_level",
                 severity=Severity.BLOCKS_TRANSMISSION,
                 layer="retailer",
-                message=f"HL loop {node.hl_id} has unknown level code '{node.level_code}' — {config.name} expects S, O, I, or P.",
+                message=f"HL loop {node.hl_id} has unknown level code '{node.level_code}' — {config.name} expects S, O, T, P, or I.",
                 segment_id="HL",
                 location=f"HL loop {node.hl_id}",
             ))
@@ -97,7 +102,7 @@ def check_hl_hierarchy(result: ValidationResult, config: RetailerConfig) -> None
                         rule_id="wrong_hl_hierarchy",
                         severity=Severity.BLOCKS_TRANSMISSION,
                         layer="retailer",
-                        message=f"HL loop {child.hl_id} (level '{child.level_code}') is a child of HL loop {node.hl_id} (level '{node.level_code}') — expected child level '{expected}' per {config.name} S→O→I→P hierarchy.",
+                        message=f"HL loop {child.hl_id} (level '{child.level_code}') is a child of HL loop {node.hl_id} (level '{node.level_code}') — expected child level '{expected}' per {config.name} S→O→T→P→I hierarchy.",
                         segment_id="HL",
                         location=f"HL loop {child.hl_id}",
                         fee=fee_info["fee"],
@@ -108,7 +113,7 @@ def check_hl_hierarchy(result: ValidationResult, config: RetailerConfig) -> None
                         rule_id="wrong_hl_hierarchy",
                         severity=Severity.BLOCKS_TRANSMISSION,
                         layer="retailer",
-                        message=f"HL loop {child.hl_id} (level '{child.level_code}') is a child of HL loop {node.hl_id} (level '{node.level_code}') — pack level should not have children.",
+                        message=f"HL loop {child.hl_id} (level '{child.level_code}') is a child of HL loop {node.hl_id} (level '{node.level_code}') — item level should not have children.",
                         segment_id="HL",
                         location=f"HL loop {child.hl_id}",
                         fee=fee_info["fee"],
@@ -194,25 +199,31 @@ def check_order_level(result: ValidationResult, config: RetailerConfig) -> None:
             ))
 
 
-def check_tare_level(result: ValidationResult, config: RetailerConfig) -> None:
-    """Check required segments at tare/container level (I)."""
+def check_container_level(result: ValidationResult, config: RetailerConfig) -> None:
+    """Check SSCC-18 barcodes (MAN) at the container levels — Tare (T) and Pack (P).
+
+    In X12 856 the SSCC-18 identifies a physical shipping unit, so it
+    belongs on the tare (pallet) and/or pack (carton) HL loops, not on the
+    item-detail level.
+    """
     if not config.require_sscc18:
         return
 
     all_nodes = collect_all_nodes(result.hl_tree)
-    tare_nodes = [n for n in all_nodes if n.level_code == "I"]
+    container_nodes = [n for n in all_nodes if n.level_code in ("T", "P")]
 
-    for i_node in tare_nodes:
-        man_segs = [seg for seg in i_node.segments if seg.segment_id == "MAN"]
+    for node in container_nodes:
+        level_name = "tare" if node.level_code == "T" else "pack"
+        man_segs = [seg for seg in node.segments if seg.segment_id == "MAN"]
         if not man_segs:
             fee_info = _get_fee(config, "missing_sscc18")
             result.findings.append(Finding(
                 rule_id="missing_sscc18",
                 severity=Severity.WILL_CAUSE_CHARGEBACK,
                 layer="retailer",
-                message=f"No MAN segment (SSCC-18 barcode) at tare-level HL loop {i_node.hl_id}.",
+                message=f"No MAN segment (SSCC-18 barcode) at {level_name}-level HL loop {node.hl_id}.",
                 segment_id="MAN",
-                location=f"HL loop {i_node.hl_id} (tare)",
+                location=f"HL loop {node.hl_id} ({level_name})",
                 fee=fee_info["fee"],
                 fee_per=fee_info["per"],
             ))
@@ -230,29 +241,33 @@ def check_tare_level(result: ValidationResult, config: RetailerConfig) -> None:
                             message=error,
                             segment_id="MAN",
                             element_id="MAN02",
-                            location=f"HL loop {i_node.hl_id} (tare)",
+                            location=f"HL loop {node.hl_id} ({level_name})",
                             fee=fee_info["fee"],
                             fee_per=fee_info["per"],
                         ))
 
 
-def check_pack_level(result: ValidationResult, config: RetailerConfig) -> None:
-    """Check catch-weight items have MEA*WT at pack level (P)."""
+def check_item_level(result: ValidationResult, config: RetailerConfig) -> None:
+    """Check catch-weight items have MEA*WT at the item level (I).
+
+    SN1 item detail lives on the item-level HL loop, so the catch-weight
+    weight (MEA*WT) is required there for LB/KG/OZ units of measure.
+    """
     if not config.check_catch_weight:
         return
 
     all_nodes = collect_all_nodes(result.hl_tree)
-    pack_nodes = [n for n in all_nodes if n.level_code == "P"]
+    item_nodes = [n for n in all_nodes if n.level_code == "I"]
 
-    for p_node in pack_nodes:
-        sn1_segs = [seg for seg in p_node.segments if seg.segment_id == "SN1"]
+    for i_node in item_nodes:
+        sn1_segs = [seg for seg in i_node.segments if seg.segment_id == "SN1"]
         if not sn1_segs:
             continue
 
         sn1 = sn1_segs[0]
         uom = sn1.element(3).strip()
         if uom in ("LB", "KG", "OZ"):
-            mea_segs = [seg for seg in p_node.segments if seg.segment_id == "MEA"]
+            mea_segs = [seg for seg in i_node.segments if seg.segment_id == "MEA"]
             has_weight_mea = any(
                 seg.element(1).strip() == "WT" for seg in mea_segs
             )
@@ -265,10 +280,30 @@ def check_pack_level(result: ValidationResult, config: RetailerConfig) -> None:
                     layer="retailer",
                     message=f"Catch-weight item (line {line_num}, UOM={uom}) shipped without MEA*WT segment.",
                     segment_id="MEA",
-                    location=f"HL loop {p_node.hl_id} (pack)",
+                    location=f"HL loop {i_node.hl_id} (item)",
                     fee=fee_info["fee"],
                     fee_per=fee_info["per"],
                 ))
+
+
+def check_bsn_purpose(result: ValidationResult, config: RetailerConfig) -> None:
+    """Check BSN01 purpose code against the retailer's accepted set.
+
+    The layer-2 field check accepts any X12-valid purpose code (00/01/05);
+    individual retailers accept a narrower set (e.g. UNFI takes 00 only), so
+    this catches retailer-specific rejections that the generic check misses.
+    """
+    purpose = result.bsn_data.get("purpose_code", "").strip()
+    if purpose and purpose not in config.allowed_bsn_purpose_codes:
+        allowed = ", ".join(sorted(config.allowed_bsn_purpose_codes))
+        result.findings.append(Finding(
+            rule_id="retailer_bsn_purpose_not_accepted",
+            severity=Severity.BLOCKS_TRANSMISSION,
+            layer="retailer",
+            message=f"BSN01 purpose code '{purpose}' is not accepted by {config.name} — allowed: {allowed}.",
+            segment_id="BSN",
+            element_id="BSN01",
+        ))
 
 
 def run_retailer_checks(result: ValidationResult, config: RetailerConfig) -> ValidationResult:
@@ -276,10 +311,11 @@ def run_retailer_checks(result: ValidationResult, config: RetailerConfig) -> Val
     if not result.hl_tree:
         return result
 
+    check_bsn_purpose(result, config)
     check_hl_hierarchy(result, config)
     check_shipment_level(result, config)
     check_order_level(result, config)
-    check_tare_level(result, config)
-    check_pack_level(result, config)
+    check_container_level(result, config)
+    check_item_level(result, config)
 
     return result

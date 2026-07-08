@@ -3,7 +3,7 @@
 Synthetic EDI X12 documents for testing and demonstration. All documents
 use the fictional company "Cinderhaven Foods" as the sender/supplier.
 
-## Document count: 24
+## Document count: 26
 
 ### 850 Purchase Orders (11 samples)
 
@@ -21,21 +21,23 @@ use the fictional company "Cinderhaven Foods" as the sender/supplier.
 | `costco/850_basic.edi` | Costco | Standard club PO |
 | `costco/850_catch_weight.edi` | Costco | PO with catch-weight bulk items |
 
-### 856 Advance Ship Notices (13 samples)
+### 856 Advance Ship Notices (15 samples)
 
 | File | Retailer | Purpose |
 |------|----------|---------|
 | `walmart/856_clean.edi` | Walmart | Valid ASN — passes all checks |
+| `walmart/856_correct_hierarchy.edi` | Walmart | Valid ASN with an optional Tare level (S→O→T→P→I) |
+| `walmart/856_inverted_hierarchy.edi` | Walmart | Inverted build — SSCC at item, detail at pack; must fail |
 | `walmart/856_bad_dtm.edi` | Walmart | Invalid date formats (not CCYYMMDD) |
-| `walmart/856_wrong_hl_order.edi` | Walmart | HL levels out of S→O→I→P order |
+| `walmart/856_wrong_hl_order.edi` | Walmart | HL levels out of S→O→P→I order |
 | `walmart/856_missing_mea.edi` | Walmart | Catch-weight items without MEA*WT |
 | `walmart/856_missing_segment.edi` | Walmart | Missing N1*ST and PRF segments |
 | `amazon/856_clean.edi` | Amazon | Valid ASN |
-| `amazon/856_missing_sscc18.edi` | Amazon | Tare level without MAN segment |
+| `amazon/856_missing_sscc18.edi` | Amazon | Pack level without MAN segment |
 | `unfi/856_clean.edi` | UNFI | Valid ASN |
 | `unfi/856_missing_catch_weight.edi` | UNFI | Bulk items (LB/KG) without MEA*WT |
 | `kehe/856_clean.edi` | KeHE | Valid ASN |
-| `kehe/856_wrong_hl_order.edi` | KeHE | S→I→P (skips order level) |
+| `kehe/856_wrong_hl_order.edi` | KeHE | Pack directly under shipment (skips order level) |
 | `costco/856_clean.edi` | Costco | Valid ASN |
 | `costco/856_missing_segments.edi` | Costco | Missing ship-to, PO ref, catch-weight |
 

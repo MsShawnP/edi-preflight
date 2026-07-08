@@ -24,8 +24,8 @@ bsn:
     BSN04: { name: time, required: true, format: HHMM }
 
 # --- HL loop structure ---
-# UNFI uses standard S→O→I→P. Tare level is optional for some DCs
-# but SSCC-18 is strongly recommended.
+# UNFI uses standard S→O→T→P→I. Tare level is optional for some DCs
+# but SSCC-18 (at the Pack/Tare container) is strongly recommended.
 
 hl_loop:
   required: true
@@ -59,12 +59,12 @@ hl_loop:
           elements:
             PRF01: { name: po_number, required: true }
 
-    I:
+    T:
       name: tare
-      code: "I"
+      code: "T"
       required: false
       parent: O
-      description: Tare level optional for some UNFI DCs but recommended
+      description: Tare (pallet) level — optional for some UNFI DCs
       child_segments:
         - segment: MAN
           required: false
@@ -73,8 +73,20 @@ hl_loop:
     P:
       name: pack
       code: "P"
-      required: false
-      parent: I
+      required: true
+      parent: O  # or T, when a pallet/tare level is present
+      description: Pack (carton/case) — carries the SSCC-18
+      child_segments:
+        - segment: MAN
+          required: false
+          description: SSCC-18 — recommended but not always enforced
+
+    I:
+      name: item
+      code: "I"
+      required: true
+      parent: P
+      description: Item detail — shipped quantity per line
       child_segments:
         - segment: SN1
           required: true

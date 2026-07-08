@@ -23,7 +23,9 @@ bsn:
     BSN04: { name: time, required: true, format: HHMM, description: "Ship time" }
 
 # --- HL (Hierarchical Level) loop structure ---
-# Walmart requires strict S→O→I→P hierarchy.
+# X12 element 735 nesting: Shipment→Order→Tare→Pack→Item. Tare is optional;
+# Walmart requires a Pack level carrying the SSCC-18 and an Item level
+# carrying the SN1 shipped-quantity detail.
 
 hl_loop:
   required: true
@@ -84,13 +86,27 @@ hl_loop:
           elements:
             PRF01: { name: po_number, required: true }
 
-    I:
+    T:
       name: tare
-      code: "I"
+      code: "T"
+      required: false
+      parent: O
+      description: Tare level — pallet (optional); carries a pallet SSCC-18
+      child_segments:
+        - segment: MAN
+          required: false
+          description: Marks and numbers — pallet SSCC-18 barcode
+          elements:
+            MAN01: { name: qualifier, values: ["GM", "CP"], description: "GM=SSCC-18" }
+            MAN02: { name: number, description: "SSCC-18 barcode (18 digits)" }
+
+    P:
+      name: pack
+      code: "P"
       required: true
       min_count: 1
-      parent: O
-      description: Tare level — pallet or case (shipping container)
+      parent: O  # or T, when a pallet/tare level is present
+      description: Pack level — shipping container (carton/case); carries the SSCC-18
       child_segments:
         - segment: MAN
           required: true
@@ -99,12 +115,13 @@ hl_loop:
             MAN01: { name: qualifier, required: true, values: ["GM", "CP"], description: "GM=SSCC-18" }
             MAN02: { name: number, required: true, description: "SSCC-18 barcode (18 digits)" }
 
-    P:
-      name: pack
-      code: "P"
-      required: false
-      parent: I
-      description: Pack level — item detail within a container
+    I:
+      name: item
+      code: "I"
+      required: true
+      min_count: 1
+      parent: P
+      description: Item level — shipped-quantity detail within a pack
       child_segments:
         - segment: SN1
           required: true

@@ -32,7 +32,7 @@ Each 856 YAML file includes:
 
 - **Envelope requirements** — GS functional ID, ST transaction type
 - **BSN segment** — required elements and valid codes
-- **HL loop structure** — level hierarchy (S→O→I→P), required child segments
+- **HL loop structure** — level hierarchy (S→O→T→P→I), required child segments
 - **Chargeback fee schedule** — fee amount, per-unit, severity, description
 - **Severity levels** — ordered from blocks-transmission to cosmetic
 

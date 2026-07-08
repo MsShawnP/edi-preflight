@@ -77,7 +77,7 @@ class TestBadDtmFormat:
 # --- Wrong HL order: structural validation should still parse ---
 
 class TestWrongHLOrder:
-    """Wrong HL order is a retailer-specific rule (S→O→I→P), not structural.
+    """Wrong HL order is a retailer-specific rule (S→O→P→I), not structural.
     Structural validation just checks that HL segments exist and BSN is present.
     The ordering check is done in layer 3 (retailer-specific)."""
 

@@ -67,7 +67,7 @@ class HLNode:
     """A parsed HL loop node."""
     hl_id: str
     parent_id: str
-    level_code: str  # S, O, I, P
+    level_code: str  # S=Shipment, O=Order, T=Tare, P=Pack, I=Item
     segments: list[Segment] = field(default_factory=list)
     children: list[HLNode] = field(default_factory=list)
 
