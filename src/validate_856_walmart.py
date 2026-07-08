@@ -1,7 +1,7 @@
 """Walmart-specific 856 ASN validation (layer 3).
 
 Uses the shared retailer validation framework with Walmart's
-chargeback fee schedule and strict S→O→I→P hierarchy.
+chargeback fee schedule and strict S→O→T→P→I hierarchy.
 """
 
 from __future__ import annotations

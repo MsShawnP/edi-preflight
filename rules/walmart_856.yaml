@@ -176,7 +176,7 @@ chargebacks:
     fee: 0.00
     per: document
     severity: blocks-transmission
-    description: HL loop levels not in S→O→I→P order
+    description: HL loop levels not in S→O→T→P→I order
 
   missing_catch_weight:
     fee: 100.00

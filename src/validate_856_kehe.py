@@ -1,6 +1,6 @@
 """KeHE-specific 856 ASN validation (layer 3).
 
-KeHE Distributors compliance checks. Standard S→O→I→P hierarchy
+KeHE Distributors compliance checks. Standard S→O→T→P→I hierarchy
 with moderate chargeback enforcement.
 """
 

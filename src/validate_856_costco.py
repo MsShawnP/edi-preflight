@@ -2,7 +2,7 @@
 
 Costco Wholesale compliance checks. Costco has strict OTIF
 requirements with some of the highest chargebacks in retail.
-Standard S→O→I→P hierarchy, all levels enforced.
+Standard S→O→T→P→I hierarchy, all levels enforced.
 """
 
 from __future__ import annotations

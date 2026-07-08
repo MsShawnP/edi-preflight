@@ -1,6 +1,6 @@
 """Amazon-specific 856 ASN validation (layer 3).
 
-Amazon Vendor Central compliance checks. Uses standard S→O→I→P
+Amazon Vendor Central compliance checks. Uses standard S→O→T→P→I
 hierarchy with Amazon's chargeback fee schedule.
 """
 
