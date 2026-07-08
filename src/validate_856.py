@@ -103,7 +103,33 @@ class ValidationResult:
 
     @property
     def total_fees(self) -> float:
+        """Raw sum of every fee. NOTE: fees are per differing unit bases
+        ($/load, $/case, $/item) and are not additive into one meaningful
+        figure — this is an internal aggregate; present fee_breakdown to
+        users instead."""
         return sum(f.fee for f in self.findings)
+
+    @property
+    def fee_breakdown(self) -> list[dict]:
+        """Chargeback exposure grouped by fee unit basis.
+
+        A $500/load fine and a $100/case fine are dimensionally different and
+        cannot be summed into a single dollar figure. Each finding represents
+        one affected unit of its basis, so we report the affected-unit count
+        and a per-basis subtotal (fee x affected units) rather than a single
+        cross-basis total.
+        """
+        groups: dict[str, dict] = {}
+        for f in self.findings:
+            if f.fee <= 0.0:
+                continue
+            basis = f.fee_per or "occurrence"
+            group = groups.setdefault(
+                basis, {"fee_per": basis, "count": 0, "subtotal": 0.0}
+            )
+            group["count"] += 1
+            group["subtotal"] += f.fee
+        return [groups[basis] for basis in sorted(groups)]
 
     def sorted_findings(self) -> list[Finding]:
         return sorted(self.findings, key=lambda f: f.severity.order)

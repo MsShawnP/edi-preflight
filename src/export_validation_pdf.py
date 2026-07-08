@@ -89,8 +89,16 @@ def _build_header(result: ValidationResult, retailer_label: str) -> list:
         verdict_style.fontSize = 11
 
         fee_part = ""
-        if result.total_fees > 0:
-            fee_part = f" &nbsp;&nbsp;|&nbsp;&nbsp; Est. Chargebacks: <b>{format_currency(result.total_fees)}</b>"
+        if result.fee_breakdown:
+            parts = [
+                f"{format_currency(g['subtotal'])} ({g['count']}&times; per {g['fee_per']})"
+                for g in result.fee_breakdown
+            ]
+            fee_part = (
+                " &nbsp;&nbsp;|&nbsp;&nbsp; Est. Chargebacks: <b>"
+                + "; ".join(parts)
+                + "</b>"
+            )
 
         elements.append(Paragraph(
             f"<b>{severity.label.upper()}</b> — {count} finding{'s' if count != 1 else ''} detected.{fee_part}",
@@ -206,13 +214,18 @@ def _build_chargeback_table(result: ValidationResult) -> list:
             f.fee_per,
         ])
 
-    # Total row
-    data.append([
-        "Total Estimated Chargebacks",
-        "",
-        format_currency(result.total_fees),
-        "",
-    ])
+    # Per-basis subtotal rows. Fees of different bases ($/load, $/case,
+    # $/item) are not additive, so we subtotal within each basis instead of
+    # printing one cross-basis grand total.
+    breakdown = result.fee_breakdown
+    subtotal_start = len(data)
+    for g in breakdown:
+        data.append([
+            f"Subtotal — {g['count']}× per {g['fee_per']}",
+            "",
+            format_currency(g["subtotal"]),
+            g["fee_per"],
+        ])
 
     col_widths = [3.2 * inch, 1.4 * inch, 0.9 * inch, 0.7 * inch]
     table = Table(data, colWidths=col_widths, repeatRows=1)
@@ -229,13 +242,23 @@ def _build_chargeback_table(result: ValidationResult) -> list:
         ("LEFTPADDING", (0, 0), (-1, -1), 4),
         ("RIGHTPADDING", (0, 0), (-1, -1), 4),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        # Bold + gray background on total row
-        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
-        ("BACKGROUND", (0, -1), (-1, -1), _LIGHT_GRAY),
+        # Bold + gray background on the subtotal rows
+        ("FONTNAME", (0, subtotal_start), (-1, -1), "Helvetica-Bold"),
+        ("BACKGROUND", (0, subtotal_start), (-1, -1), _LIGHT_GRAY),
     ]
 
     table.setStyle(TableStyle(style_commands))
     elements.append(table)
+
+    note_style = _STYLES["Normal"].clone("cb_note")
+    note_style.fontSize = 7
+    note_style.textColor = colors.HexColor("#666666")
+    elements.append(Paragraph(
+        "Fees are quoted per differing units ($/load, $/case, $/item) and are "
+        "not summed into a single figure — each subtotal is the fee times the "
+        "affected units of that type.",
+        note_style,
+    ))
     elements.append(Spacer(1, 12))
 
     return elements

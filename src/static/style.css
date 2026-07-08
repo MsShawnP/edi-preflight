@@ -725,6 +725,12 @@ button[type="submit"]:focus-visible {
 
 .chargeback-summary { margin-top: 32px; }
 
+.chargeback-note {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: var(--ll-london-35);
+}
+
 /* ── Error panel ───────────────────────────────────────────── */
 
 .error-panel {

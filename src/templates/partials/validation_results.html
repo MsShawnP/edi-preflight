@@ -59,12 +59,12 @@
                 <span class="stat-label">Retailer-Specific</span>
             </div>
             {% endif %}
-            {% if result.total_fees > 0 %}
+            {% for group in result.fee_breakdown %}
             <div class="summary-stat">
-                <span class="stat-number stat-fee">{{ result.total_fees | currency }}</span>
-                <span class="stat-label">Est. Chargebacks</span>
+                <span class="stat-number stat-fee">{{ group.subtotal | currency }}</span>
+                <span class="stat-label">Est. Chargebacks — {{ group.count }} &times; per {{ group.fee_per }}</span>
             </div>
-            {% endif %}
+            {% endfor %}
         </div>
     </div>
 
@@ -158,13 +158,16 @@
                 {% endfor %}
             </tbody>
             <tfoot>
+                {% for group in result.fee_breakdown %}
                 <tr>
-                    <td colspan="2"><strong>Total Estimated Chargebacks</strong></td>
-                    <td class="num"><strong>{{ result.total_fees | currency }}</strong></td>
-                    <td></td>
+                    <td colspan="2"><strong>Subtotal — {{ group.count }} &times; per {{ group.fee_per }}</strong></td>
+                    <td class="num"><strong>{{ group.subtotal | currency }}</strong></td>
+                    <td>{{ group.fee_per }}</td>
                 </tr>
+                {% endfor %}
             </tfoot>
         </table>
+        <p class="chargeback-note">Fees are quoted per differing units ($/load, $/case, $/item) and are not summed into a single figure — each subtotal is the fee times the affected units of that type.</p>
     </section>
     {% endif %}
     {% endif %}
