@@ -124,6 +124,15 @@ header .brand-name a {
     letter-spacing: 0.04em;
 }
 
+.hero-why {
+    margin: 8px 0 0;
+    max-width: 60ch;
+    font-family: var(--ll-sans);
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--ll-london-5);
+}
+
 /* ── Main ──────────────────────────────────────────────────── */
 
 main { padding: 48px 0; }
