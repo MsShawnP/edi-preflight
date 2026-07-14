@@ -221,22 +221,18 @@ severity_levels:
     order: 1
     label: Blocks Transmission
     description: Document will be rejected by trading partner
-    color: "#c0392b"
 
   will-cause-chargeback:
     order: 2
     label: Will Cause Chargeback
     description: Document will be accepted but will trigger a chargeback
-    color: "#e67e22"
 
   may-cause-chargeback:
     order: 3
     label: May Cause Chargeback
     description: Potential chargeback depending on retailer review
-    color: "#f1c40f"
 
   cosmetic:
     order: 4
     label: Cosmetic
     description: Not spec-compliant but unlikely to cause issues
-    color: "#95a5a6"

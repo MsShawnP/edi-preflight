@@ -157,16 +157,12 @@ severity_levels:
   blocks-transmission:
     order: 1
     label: Blocks Transmission
-    color: "#c0392b"
   will-cause-chargeback:
     order: 2
     label: Will Cause Chargeback
-    color: "#e67e22"
   may-cause-chargeback:
     order: 3
     label: May Cause Chargeback
-    color: "#f1c40f"
   cosmetic:
     order: 4
     label: Cosmetic
-    color: "#95a5a6"
