@@ -18,6 +18,7 @@ from reportlab.platypus import (
     Spacer,
 )
 
+from src.brand_fonts import register_fonts, SERIF_BOLD, SANS, SANS_BOLD
 from src.formatting import format_currency, format_edi_date
 from src.validate_856 import Finding, Severity, ValidationResult
 
@@ -160,10 +161,11 @@ def _build_findings_section(
     table = Table(data, colWidths=col_widths, repeatRows=1)
 
     style_commands = [
+        ("FONTNAME", (0, 0), (-1, -1), SANS),
         ("BACKGROUND", (0, 0), (-1, 0), _HEADER_BG),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTSIZE", (0, 0), (-1, 0), 8),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 0), (-1, 0), SANS_BOLD),
         ("FONTSIZE", (0, 1), (-1, -1), 8),
         ("ALIGN", (3, 0), (3, -1), "RIGHT"),
         ("GRID", (0, 0), (-1, -1), 0.5, _BORDER),
@@ -231,10 +233,11 @@ def _build_chargeback_table(result: ValidationResult) -> list:
     table = Table(data, colWidths=col_widths, repeatRows=1)
 
     style_commands = [
+        ("FONTNAME", (0, 0), (-1, -1), SANS),
         ("BACKGROUND", (0, 0), (-1, 0), _HEADER_BG),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 0), (-1, 0), SANS_BOLD),
         ("ALIGN", (2, 0), (2, -1), "RIGHT"),
         ("GRID", (0, 0), (-1, -1), 0.5, _BORDER),
         ("TOPPADDING", (0, 0), (-1, -1), 3),
@@ -243,7 +246,7 @@ def _build_chargeback_table(result: ValidationResult) -> list:
         ("RIGHTPADDING", (0, 0), (-1, -1), 4),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         # Bold + gray background on the subtotal rows
-        ("FONTNAME", (0, subtotal_start), (-1, -1), "Helvetica-Bold"),
+        ("FONTNAME", (0, subtotal_start), (-1, -1), SANS_BOLD),
         ("BACKGROUND", (0, subtotal_start), (-1, -1), _LIGHT_GRAY),
     ]
 
@@ -269,6 +272,11 @@ def export_validation_pdf(
     retailer_label: str,
 ) -> bytes:
     """Generate a PDF validation report from an 856 ValidationResult."""
+    register_fonts()
+    _STYLES["Normal"].fontName = SANS
+    _STYLES["Title"].fontName = SERIF_BOLD
+    _STYLES["Heading2"].fontName = SERIF_BOLD
+
     buf = io.BytesIO()
 
     shipment_id = result.bsn_data.get("shipment_id", "")

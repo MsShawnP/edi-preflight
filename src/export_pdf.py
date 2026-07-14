@@ -12,6 +12,7 @@ from reportlab.platypus import (
     Spacer,
 )
 
+from src.brand_fonts import register_fonts, SERIF_BOLD, SANS, SANS_BOLD
 from src.extract_850 import PurchaseOrder
 from src.formatting import format_currency, format_edi_date, format_quantity
 
@@ -109,10 +110,11 @@ def _build_line_items_table(po: PurchaseOrder) -> list:
 
     table = Table(data, colWidths=col_widths, repeatRows=1)
     table.setStyle(TableStyle([
+        ("FONTNAME", (0, 0), (-1, -1), SANS),
         ("BACKGROUND", (0, 0), (-1, 0), _HEADER_BG),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTSIZE", (0, 0), (-1, 0), 8),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 0), (-1, 0), SANS_BOLD),
         ("FONTSIZE", (0, 1), (-1, -1), 8),
         ("ALIGN", (2, 0), (5, -1), "RIGHT"),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, _LIGHT_GRAY]),
@@ -153,10 +155,11 @@ def _build_allowances_section(po: PurchaseOrder) -> list:
     col_widths = [0.8 * inch, 0.7 * inch, 2.5 * inch, 0.9 * inch, 0.7 * inch]
     table = Table(data, colWidths=col_widths, repeatRows=1)
     table.setStyle(TableStyle([
+        ("FONTNAME", (0, 0), (-1, -1), SANS),
         ("BACKGROUND", (0, 0), (-1, 0), _HEADER_BG),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 0), (-1, 0), SANS_BOLD),
         ("ALIGN", (3, 0), (4, -1), "RIGHT"),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, _LIGHT_GRAY]),
         ("GRID", (0, 0), (-1, -1), 0.5, _BORDER),
@@ -192,6 +195,11 @@ def _build_totals_section(po: PurchaseOrder) -> list:
 
 
 def export_850_pdf(po: PurchaseOrder) -> bytes:
+    register_fonts()
+    _STYLES["Normal"].fontName = SANS
+    _STYLES["Title"].fontName = SERIF_BOLD
+    _STYLES["Heading2"].fontName = SERIF_BOLD
+
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
         buf,
