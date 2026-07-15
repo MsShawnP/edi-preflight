@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, Response
+from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -22,8 +23,34 @@ from src.x12_tokenizer import TokenizeError, tokenize
 
 _SRC_DIR = Path(__file__).parent
 _MAX_INPUT_BYTES = 2 * 1024 * 1024  # 2 MB
+# Starlette caps each form field at 1 MB by default, which silently undercuts our
+# advertised 2 MB limit: a >1 MB paste is rejected with a raw 400 (JSON) before
+# _read_edi_content can return the friendly "2 MB limit" message. Lift the parser
+# ceiling above our own limit so our size check is the one that governs, keeping a
+# generous hard ceiling as a DoS backstop.
+_MAX_PART_SIZE = 8 * 1024 * 1024  # parser hard ceiling; app enforces 2 MB within
+
+
+class _LiftFormLimitRoute(APIRoute):
+    """Pre-parse form bodies with a raised max_part_size so the endpoint's own
+    request.form() reuses the cached FormData instead of re-parsing at 1 MB."""
+
+    def get_route_handler(self):
+        original = super().get_route_handler()
+
+        async def handler(request: Request):
+            content_type = request.headers.get("content-type", "")
+            if request.method == "POST" and (
+                "form-data" in content_type or "x-www-form-urlencoded" in content_type
+            ):
+                await request.form(max_part_size=_MAX_PART_SIZE)
+            return await original(request)
+
+        return handler
+
 
 app = FastAPI(title="EDI Pre-flight", docs_url=None, redoc_url=None, openapi_url=None)
+app.router.route_class = _LiftFormLimitRoute
 
 
 @app.middleware("http")
