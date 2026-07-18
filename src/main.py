@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from urllib.parse import quote
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, Response
@@ -357,6 +358,27 @@ async def validate_edi(
         "retailer": len(result.retailer_findings),
     }
 
+    # Prefilled mailto for the results CTA — summary metrics only. The document
+    # itself is never transmitted; the user attaches it from their own mail
+    # client, keeping the "documents are not stored" promise intact.
+    _subject = f"EDI validation — {retailer_label} 856 ASN"
+    _body = (
+        "Hi Shawn,\r\n\r\n"
+        f"I ran an 856 ASN through your EDI pre-flight for {retailer_label} "
+        "and got:\r\n\r\n"
+        "Document: 856 ASN\r\n"
+        f" Retailer: {retailer_label}\r\n"
+        f" Findings: {finding_counts['total']}\r\n\r\n"
+        "My file is attached. Which of these will actually cost me?\r\n\r\n"
+        "Thanks,\r\n"
+    )
+    mailto_link = (
+        "mailto:shawn@lailarallc.com?subject="
+        + quote(_subject)
+        + "&body="
+        + quote(_body)
+    )
+
     return templates.TemplateResponse(
         request, "partials/validation_results.html", {
             "result": result,
@@ -364,6 +386,7 @@ async def validate_edi(
             "finding_counts": finding_counts,
             "edi_content": content,
             "retailer_value": detected.value,
+            "mailto_link": mailto_link,
         }
     )
 

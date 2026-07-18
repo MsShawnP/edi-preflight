@@ -68,6 +68,20 @@
         </div>
     </div>
 
+    <div class="results-cta {% if finding_counts.total > 0 %}cta-issues{% else %}cta-clean{% endif %}">
+        {% if finding_counts.total > 0 %}
+        <h2 class="results-cta-heading">{{ finding_counts.total }} of these will fail at the retailer.</h2>
+        <p class="results-cta-body">EDI errors are what become rejected ASNs and OTIF fines &mdash; the chargebacks nobody can trace back to a cause three months later. Send me your file and I&rsquo;ll tell you which failures will actually cost you, and what they add up to. You&rsquo;ll get it back in writing. No call.</p>
+        <a class="btn-cta" href="{{ mailto_link }}">Send my file to Shawn for a free read</a>
+        <p class="results-cta-helper">Opens your email app with the summary filled in &mdash; attach your file and send.</p>
+        <a class="results-cta-secondary" href="https://lailarallc.com/services" target="_blank" rel="noopener">See how the full audit works &rarr;</a>
+        {% else %}
+        <h2 class="results-cta-heading">These documents are clean.</h2>
+        <p class="results-cta-body">That&rsquo;s rarer than you&rsquo;d think. If you want the same check run across your product master and transaction data, that&rsquo;s the Data Health Snapshot.</p>
+        <a class="results-cta-secondary" href="https://lailarallc.com/services" target="_blank" rel="noopener">See how the full audit works &rarr;</a>
+        {% endif %}
+    </div>
+
     {% if result.is_valid %}
     <section class="validation-pass-message">
         <p>This document passed all structural, field-level, and retailer-specific checks. No issues found.</p>
