@@ -9,6 +9,18 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-07-18 — Deploy + smoke-test >1 MB paste fix
+
+**Started from:** Clean main branch. The `_LiftFormLimitRoute` fix (lifting Starlette's 1 MB form-parser cap so the app's own 2 MB limit governs) was committed but not yet deployed or verified in production.
+
+**Did:** Updated og:url meta tag to custom domain. Deployed to Fly.io. Smoke-tested the form-parser fix live: 1.5 MB payload reached the app's parser (PASS), 3 MB payload got the app's friendly "exceeds 2 MB" rejection (PASS). Starlette's raw 400 is gone.
+
+**State:** 312 tests passing. Production deployed and verified. No active PLAN.md arc (previous arc complete). The >1 MB paste fix is confirmed working in production.
+
+**Next:** No active arc. Project is a clean, deployed portfolio piece. Potential follow-ups: rate limiting based on traffic, Cinderhaven case study, or moving to a different project.
+
+---
+
 ## 2026-05-22 — Deploy + CTA removal
 
 **Started from:** Arc complete, Lailara design system applied but not yet deployed.
