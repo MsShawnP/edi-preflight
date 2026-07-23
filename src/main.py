@@ -379,6 +379,24 @@ async def validate_edi(
         + quote(_body)
     )
 
+    # Clean-case variant — same mechanism, adapted body for a 0-finding result.
+    _body_clean = (
+        "Hi Shawn,\r\n\r\n"
+        f"I ran an 856 ASN through your EDI pre-flight for {retailer_label} "
+        "and it came back clean.\r\n\r\n"
+        "Document: 856 ASN\r\n"
+        f" Retailer: {retailer_label}\r\n\r\n"
+        "Can you check my other EDI documents, or trace where past chargebacks "
+        "started? Files attached.\r\n\r\n"
+        "Thanks,\r\n"
+    )
+    mailto_link_clean = (
+        "mailto:shawn@lailarallc.com?subject="
+        + quote(_subject)
+        + "&body="
+        + quote(_body_clean)
+    )
+
     return templates.TemplateResponse(
         request, "partials/validation_results.html", {
             "result": result,
@@ -387,6 +405,7 @@ async def validate_edi(
             "edi_content": content,
             "retailer_value": detected.value,
             "mailto_link": mailto_link,
+            "mailto_link_clean": mailto_link_clean,
         }
     )
 
