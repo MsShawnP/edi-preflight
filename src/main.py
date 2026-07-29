@@ -103,9 +103,20 @@ async def index(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
+# The 856 sample must exercise a chargeback-tier rule, not only a structural
+# one. 856_wrong_hl_order yields exactly one finding, severity
+# blocks-transmission, which carries no cost estimate — so the "Est.
+# Chargebacks" tile renders empty and the demo shows $0.00. Measured against
+# the full validate_856 -> validate_856_walmart chain:
+#   856_wrong_hl_order      1 finding   (1 blocks-transmission)
+#   856_missing_segment     2 findings  (2 blocks-transmission)
+#   856_missing_mea         2 findings  (2 will-cause-chargeback)
+#   856_inverted_hierarchy  3 findings  (2 blocks, 1 will-cause-chargeback)
+#   856_bad_dtm             4 findings  (3 may-cause, 1 will-cause-chargeback)
+#   856_clean               0 findings
 _SAMPLE_FILES = {
     "850": _SAMPLES_DIR / "walmart" / "850_with_allowances.edi",
-    "856": _SAMPLES_DIR / "walmart" / "856_wrong_hl_order.edi",
+    "856": _SAMPLES_DIR / "walmart" / "856_bad_dtm.edi",
 }
 
 
