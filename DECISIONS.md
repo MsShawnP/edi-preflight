@@ -85,6 +85,11 @@ Each entry:
 - **Scope:** All edi-preflight UI and content.
 - **Do not:** Re-add lead-gen CTAs, gating, or audit-service upsells to the tool without explicit decision to reverse this.
 
+### 2026-07-30 — Neutralize untrusted EDI text before it enters generated artifacts
+- **Why:** Pasted/uploaded EDI is untrusted. Raw field values reaching a ReportLab `Paragraph` are parsed as mini-HTML — an angle bracket raises ValueError and 500s the export. Raw values written to CSV are executed as formulas by Excel/Sheets when they start with `=`, `+`, `-`, or `@`. Both were live findings this session.
+- **Scope:** Every document/export generator fed by user EDI — ReportLab PDFs (`export_pdf.py`, `export_validation_pdf.py`), CSV (`export_csv.py`), and any future exporter.
+- **Do not:** Pass a user-derived string into a ReportLab `Paragraph` without `xml.sax.saxutils.escape`, or write a user-derived CSV cell without the formula-trigger guard. Server-controlled labels (e.g. retailer names) are exempt only when verifiably non-user-derived.
+
 ---
 
 ## Reversed / Superseded

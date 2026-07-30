@@ -9,6 +9,18 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-07-30 16:10 — /wrap
+
+**Started from:** Clean deployed portfolio piece, 312 tests, no active arc (from the 2026-07-18 handoff).
+
+**Did:** Three reviews — whole-codebase Python, templates/accessibility (both background agents), live UI vs the Lailara design system. Fixed every finding across 7 commits: validator 500s on malformed 856 (2 call sites) + SE01 guard, ReportLab markup crash in both PDF exporters, silently-dropped out-of-order HL nodes, CSV formula injection, code-quality cleanup, a11y (ARIA tabs, aria-live results, focus mgmt, hardened sample loader), design (1200px container, will/may chargeback severity differentiation). Rebased over a remote fly.toml commit and pushed to main.
+
+**State:** 322 tests passing, tree clean, pushed to origin/main. GitHub Actions auto-deploy running.
+
+**Next:** Confirm the deploy went green and spot-check edi.lailarallc.com renders the new severity styling. Then decide on two flagged gaps — static-asset cache-busting (returning users see stale CSS/JS after a deploy) and the findings-block Jinja macro dedup.
+
+---
+
 ## 2026-07-30 16:02
 
 **What changed:** Code review + UI/Lailara-design review of the whole app; fixed every finding across 7 commits, pushed to main (auto-deploy triggered).

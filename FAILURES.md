@@ -102,3 +102,15 @@ quarto" or "scope, scrollytelling, decoration"]
 **Status:** Resolved
 
 **Tags:** csp, style-src, inline-styles, production-bug
+
+### 2026-07-30 — Preview browser served stale CSS/JS during UI verification
+
+**Attempted:** Verified design-system CSS and app.js changes by reading computed styles and ARIA state in the preview browser right after editing and reloading the page.
+
+**Why it didn't work:** The browser had cached style.css and app.js. The freshly-served HTML (Cache-Control: no-cache) showed the new ARIA markup, but computed styles and JS behavior read STALE — container still 900px, severity badges still identical, aria-selected not syncing — even though the files on disk were already correct. Nearly misdiagnosed as a failed edit.
+
+**What we tried instead:** Fetched the assets with `cache: 'no-store'` plus a cache-busting query to confirm the SERVER was serving the new files (it was), then force-replaced the stylesheet link to re-apply. Confirmed 1200px + differentiated badges rendered.
+
+**Status:** Resolved (process learning). Also surfaced a real gap: static assets have no cache-busting/versioning, so returning users get stale CSS/JS after a deploy — tracked in HANDOFF Next.
+
+**Tags:** verification, browser-cache, static-assets, preview, false-negative
