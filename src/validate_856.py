@@ -280,6 +280,31 @@ def _validate_structural(envelope: Envelope, result: ValidationResult) -> None:
 
     # Check for shipment-level HL
     all_nodes = collect_all_nodes(result.hl_tree)
+
+    # Detect HL nodes unreachable from any root — their parent reference points
+    # to an HL that is missing or appears later in document order. Without this
+    # check they (and their MAN/SN1 segments) are dropped from validation, so a
+    # broken ASN could report FEWER findings and lower chargeback exposure than
+    # a correct one. That is the opposite of what this tool must do.
+    reachable_ids = {n.hl_id for n in all_nodes}
+    orphan_ids = list(dict.fromkeys(
+        seg_id for s in hl_segments
+        if (seg_id := s.element(1).strip()) and seg_id not in reachable_ids
+    ))
+    if orphan_ids:
+        result.findings.append(Finding(
+            rule_id="hl_parent_not_found",
+            severity=Severity.BLOCKS_TRANSMISSION,
+            layer="structural",
+            message=(
+                "HL segment(s) reference a parent that is missing or appears "
+                "out of document order, so their contents cannot be validated: "
+                + ", ".join(f"HL {i}" for i in orphan_ids)
+                + "."
+            ),
+            segment_id="HL",
+        ))
+
     shipment_nodes = [n for n in all_nodes if n.level_code == "S"]
     if not shipment_nodes:
         result.findings.append(Finding(

@@ -84,6 +84,37 @@ class TestSSCCCheckedAtContainerLevel:
         assert sscc == []
 
 
+class TestOutOfOrderHLParentIsFlagged:
+    def test_hl_referencing_a_later_parent_is_not_silently_dropped(self):
+        # HL 2 (pack) names parent 3, but HL 3 (order) appears AFTER it in
+        # document order. HL 2 is therefore unreachable from any root. Without
+        # detection it — and its MAN/SSCC — would vanish from validation,
+        # under-reporting exposure. It must instead be flagged.
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*00*SHP001*20260510*1430~"
+            "HL*1**S~"
+            "TD5*B*2*UPSN*M~"
+            "DTM*011*20260510~"
+            "N1*ST*WALMART DC 6025*92*0006025~"
+            "HL*2*3*P~"
+            "MAN*GM*000000000000000000~"
+            "HL*3*1*O~"
+            "PRF*PO123~"
+            "SE*11*0001~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        orphan = [f for f in result.findings if f.rule_id == "hl_parent_not_found"]
+        assert len(orphan) == 1
+        assert "HL 2" in orphan[0].message
+        assert orphan[0].severity == Severity.BLOCKS_TRANSMISSION
+
+
 class TestCatchWeightCheckedAtItemLevel:
     def test_catch_weight_item_without_mea_is_flagged(self):
         # SN1 with a weight UOM (LB) at the item level and no MEA*WT.
