@@ -3,12 +3,16 @@
 {% block title %}EDI Pre-flight{% endblock %}
 
 {% block content %}
-<div class="mode-tabs">
-    <button class="mode-tab active" data-mode="inbound">Inbound 850 Parser</button>
-    <button class="mode-tab" data-mode="outbound">Outbound 856 Validator</button>
+<div class="mode-tabs" role="tablist" aria-label="EDI document mode">
+    <button type="button" class="mode-tab active" data-mode="inbound"
+            id="tab-inbound" role="tab" aria-selected="true"
+            aria-controls="mode-inbound">Inbound 850 Parser</button>
+    <button type="button" class="mode-tab" data-mode="outbound"
+            id="tab-outbound" role="tab" aria-selected="false"
+            aria-controls="mode-outbound">Outbound 856 Validator</button>
 </div>
 
-<div id="mode-inbound" class="mode-panel">
+<div id="mode-inbound" class="mode-panel" role="tabpanel" aria-labelledby="tab-inbound">
     <p class="mode-description">Paste or upload an inbound 850 Purchase Order to extract structured line items, allowances, and addresses.</p>
     <button type="button" class="try-sample" data-doc-type="850" data-textarea-id="edi_text_850">Try a sample Walmart 850</button>
     <form hx-post="/parse" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading-inbound" enctype="multipart/form-data">
@@ -24,12 +28,12 @@
         </div>
         <div class="form-actions">
             <button type="submit">Parse Document</button>
-            <span id="loading-inbound" class="htmx-indicator">Parsing...</span>
+            <span id="loading-inbound" class="htmx-indicator" role="status">Parsing...</span>
         </div>
     </form>
 </div>
 
-<div id="mode-outbound" class="mode-panel mode-panel-hidden">
+<div id="mode-outbound" class="mode-panel mode-panel-hidden" role="tabpanel" aria-labelledby="tab-outbound">
     <p class="mode-description">Paste or upload an outbound 856 ASN to validate against retailer-specific rules. Findings include severity tags and chargeback-dollar estimates.</p>
     <button type="button" class="try-sample" data-doc-type="856" data-textarea-id="edi_text_856">Try a sample Walmart 856</button>
     <form hx-post="/validate" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading-outbound" enctype="multipart/form-data">
@@ -58,11 +62,11 @@
         </div>
         <div class="form-actions">
             <button type="submit">Validate Document</button>
-            <span id="loading-outbound" class="htmx-indicator">Validating...</span>
+            <span id="loading-outbound" class="htmx-indicator" role="status">Validating...</span>
         </div>
     </form>
 </div>
 
-<div id="results"></div>
+<div id="results" role="region" aria-live="polite" aria-label="Results"></div>
 
 {% endblock %}
