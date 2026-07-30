@@ -3,6 +3,19 @@ import io
 
 from src.extract_850 import PurchaseOrder
 
+# Leading characters a spreadsheet treats as the start of a formula. A cell of
+# untrusted EDI text beginning with one of these could execute when the CSV is
+# opened in Excel/Sheets (CSV injection), so we defuse it.
+_FORMULA_TRIGGERS = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _neutralize(value):
+    """Prefix a formula-triggering string cell with an apostrophe so the
+    spreadsheet renders it as literal text. Non-string cells pass through."""
+    if isinstance(value, str) and value and value[0] in _FORMULA_TRIGGERS:
+        return "'" + value
+    return value
+
 
 def export_850_csv(po: PurchaseOrder) -> str:
     buf = io.StringIO()
@@ -37,7 +50,7 @@ def export_850_csv(po: PurchaseOrder) -> str:
     ship_to = po.ship_to
 
     for item in po.line_items:
-        writer.writerow([
+        writer.writerow([_neutralize(cell) for cell in [
             po.po_number,
             po.retailer.value,
             po.po_date,
@@ -61,6 +74,6 @@ def export_850_csv(po: PurchaseOrder) -> str:
             ship_to.city if ship_to else "",
             ship_to.state if ship_to else "",
             ship_to.zip_code if ship_to else "",
-        ])
+        ]])
 
     return buf.getvalue()

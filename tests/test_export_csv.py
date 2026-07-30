@@ -1,5 +1,6 @@
 import csv
 import io
+from dataclasses import replace
 from pathlib import Path
 
 from src.envelope import Retailer, parse_envelope
@@ -15,6 +16,25 @@ def _load_and_extract(filename: str):
     tokens = tokenize(raw)
     envelope = parse_envelope(tokens)
     return extract_850(envelope)
+
+
+class TestCsvFormulaInjection:
+    """A description that begins with a formula trigger must be neutralized so
+    a spreadsheet renders it as text, not an executable formula."""
+
+    def test_formula_description_is_prefixed_with_apostrophe(self):
+        po = _load_and_extract("850_basic.edi")
+        hostile = replace(po.line_items[0], description='=HYPERLINK("http://evil","x")')
+        po = replace(po, line_items=[hostile, *po.line_items[1:]])
+        rows = list(csv.reader(io.StringIO(export_850_csv(po))))
+        desc_idx = rows[0].index("Description")
+        assert rows[1][desc_idx].startswith("'=HYPERLINK")
+
+    def test_plain_description_is_unchanged(self):
+        po = _load_and_extract("850_basic.edi")
+        rows = list(csv.reader(io.StringIO(export_850_csv(po))))
+        desc_idx = rows[0].index("Description")
+        assert not rows[1][desc_idx].startswith("'")
 
 
 class TestCsvExportBasicPO:
