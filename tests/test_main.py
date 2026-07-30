@@ -143,6 +143,26 @@ class TestExportValidationPDF:
         assert r.status_code == 400
 
 
+class TestMalformedButTokenizableInput:
+    """Input that tokenizes and parses but trips the validators must return a
+    friendly error/finding, never a 500."""
+
+    def test_validate_non_numeric_se_count_does_not_500(self):
+        edi = _read_sample("walmart", "856_clean.edi").replace("SE*35*", "SE*ABC*")
+        r = client.post("/validate", data={"edi_text": edi, "retailer": "walmart"})
+        assert r.status_code == 200
+        # Surfaced as a finding, not a crash and not a generic error page.
+        assert "not a number" in r.text
+
+    def test_export_validation_pdf_non_numeric_se_count_does_not_500(self):
+        edi = _read_sample("walmart", "856_clean.edi").replace("SE*35*", "SE*ABC*")
+        r = client.post(
+            "/export/validation-pdf", data={"edi_text": edi, "retailer": "walmart"}
+        )
+        # Either a valid PDF or a friendly 400 — never a 500.
+        assert r.status_code in (200, 400)
+
+
 class TestInputSizeLimit:
     def test_oversized_paste_rejected(self):
         huge = "ISA*" + "X" * (3 * 1024 * 1024)

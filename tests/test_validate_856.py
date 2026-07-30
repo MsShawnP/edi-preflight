@@ -16,6 +16,30 @@ def _load_and_validate(filename: str):
     return validate_856(envelope)
 
 
+def _validate_raw(raw: str):
+    tokens = tokenize(raw)
+    envelope = parse_envelope(tokens)
+    return validate_856(envelope)
+
+
+# --- Non-numeric SE01: must become a finding, not a ValueError crash ---
+
+class TestNonNumericSeCount:
+    def setup_method(self):
+        raw = (SAMPLES / "856_clean.edi").read_text().replace("SE*35*", "SE*ABC*")
+        self.result = _validate_raw(raw)
+
+    def test_does_not_raise_and_flags_non_numeric_se_count(self):
+        rule_ids = [f.rule_id for f in self.result.findings]
+        assert "se_count_nonnumeric" in rule_ids
+
+    def test_non_numeric_se_count_blocks_transmission(self):
+        finding = next(
+            f for f in self.result.findings if f.rule_id == "se_count_nonnumeric"
+        )
+        assert finding.severity == Severity.BLOCKS_TRANSMISSION
+
+
 # --- Clean document: structural + field layers should pass ---
 
 class TestCleanDocument:

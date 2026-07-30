@@ -1,3 +1,4 @@
+import logging
 import re
 from pathlib import Path
 from urllib.parse import quote
@@ -21,6 +22,8 @@ from src.validate_856_unfi import validate_856_unfi
 from src.validate_856_walmart import validate_856_walmart
 from src.formatting import format_currency, format_edi_date, format_quantity
 from src.x12_tokenizer import TokenizeError, tokenize
+
+_log = logging.getLogger("edi_preflight")
 
 _SRC_DIR = Path(__file__).parent
 _MAX_INPUT_BYTES = 2 * 1024 * 1024  # 2 MB
@@ -209,13 +212,12 @@ def _validate_856_or_error(edi_text: str, retailer: str = "auto"):
             content=str(e), status_code=400, media_type="text/plain",
         )
     except Exception:
+        _log.exception("Unexpected error tokenizing/parsing 856 for export")
         return None, None, None, Response(
             content="An unexpected error occurred while processing the document.",
             status_code=400,
             media_type="text/plain",
         )
-
-    result = validate_856(envelope)
 
     detected = envelope.retailer
     if retailer != "auto":
@@ -224,9 +226,18 @@ def _validate_856_or_error(edi_text: str, retailer: str = "auto"):
         except ValueError:
             pass
 
-    validator = _RETAILER_VALIDATORS.get(detected)
-    if validator:
-        result = validator(result)
+    try:
+        result = validate_856(envelope)
+        validator = _RETAILER_VALIDATORS.get(detected)
+        if validator:
+            result = validator(result)
+    except Exception:
+        _log.exception("Unexpected error validating 856 for export")
+        return None, None, None, Response(
+            content="An unexpected error occurred while validating the document.",
+            status_code=400,
+            media_type="text/plain",
+        )
 
     retailer_label = _RETAILER_LABELS.get(detected, detected.value.title())
     return result, retailer_label, detected, None
@@ -344,9 +355,6 @@ async def validate_edi(
                         "purchase order.",
             })
 
-    # Run structural + field-level validation
-    result = validate_856(envelope)
-
     # Determine retailer for layer 3
     detected = envelope.retailer
     if retailer != "auto":
@@ -355,10 +363,21 @@ async def validate_edi(
         except ValueError:
             pass
 
-    # Run retailer-specific validation if available
-    validator = _RETAILER_VALIDATORS.get(detected)
-    if validator:
-        result = validator(result)
+    # Run structural + field-level + retailer-specific validation. This runs
+    # inside its own error handler because malformed-but-tokenizable input can
+    # still trip the validators (e.g. a non-numeric SE01, a pathologically deep
+    # HL chain) — surface a friendly error instead of a 500.
+    try:
+        result = validate_856(envelope)
+        validator = _RETAILER_VALIDATORS.get(detected)
+        if validator:
+            result = validator(result)
+    except Exception:
+        _log.exception("Unexpected error validating 856")
+        return templates.TemplateResponse(request, "partials/error.html", {
+            "error": "An unexpected error occurred while validating the document.",
+            "hint": "The document may not be a valid EDI X12 file.",
+        })
 
     retailer_label = _RETAILER_LABELS.get(detected, detected.value.title())
 

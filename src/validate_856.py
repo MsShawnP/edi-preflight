@@ -323,7 +323,16 @@ def _validate_structural(envelope: Envelope, result: ValidationResult) -> None:
     se_segs = [s for s in all_segs if s.segment_id == "SE"]
     if se_segs:
         se_count_str = se_segs[0].element(1).strip()
-        if se_count_str:
+        if se_count_str and not se_count_str.isdigit():
+            result.findings.append(Finding(
+                rule_id="se_count_nonnumeric",
+                severity=Severity.BLOCKS_TRANSMISSION,
+                layer="structural",
+                message=f"SE01 segment count '{se_count_str}' is not a number.",
+                segment_id="SE",
+                element_id="SE01",
+            ))
+        elif se_count_str:
             se_count = int(se_count_str)
             # SE count includes ST and SE themselves
             actual_count = len(segments) + 2  # +2 for ST and SE
