@@ -57,6 +57,7 @@
   --ll-sg-95:          #fdeee0;
   --ll-sg-85:          #fbdabc;
   --ll-sg-55:          #ee8a2a;
+  --ll-sg-8:           #4a2508;
   --ll-london-95:      #f2f2f2;
   --ll-london-90:      #e0e0e0;
   --ll-london-85:      #d9d9d9;
@@ -87,7 +88,7 @@ body {
 /* ── Layout ────────────────────────────────────────────────── */
 
 .container {
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 24px;
 }
@@ -602,9 +603,12 @@ button[type="submit"]:focus-visible {
     color: #7a0906;
 }
 
+/* "Will" and "may" cause chargeback are distinct severity tiers; give them a
+   visible weight difference within the Singapore ramp so the tier reads at a
+   glance, not only from the label text. "Will" = filled amber; "may" = pale. */
 .badge-severity-will-cause-chargeback {
-    background: var(--ll-sg-95);
-    color: #7a3d10;
+    background: var(--ll-sg-85);
+    color: var(--ll-sg-8);
 }
 
 .badge-severity-may-cause-chargeback {
@@ -743,7 +747,7 @@ button[type="submit"]:focus-visible {
 
 .finding-blocks-transmission { border-left-color: var(--ll-red-42); }
 .finding-will-cause-chargeback { border-left-color: var(--ll-sg-55); }
-.finding-may-cause-chargeback { border-left-color: var(--ll-sg-55); }
+.finding-may-cause-chargeback { border-left-color: var(--ll-sg-85); }
 .finding-cosmetic { border-left-color: var(--ll-london-70); }
 
 .finding-header {
@@ -819,7 +823,7 @@ button[type="submit"]:focus-visible {
     padding: 16px 20px;
 }
 
-.error-panel h3 {
+.error-panel h2 {
     margin: 0 0 8px;
     font-family: var(--ll-serif);
     font-size: 18px;
