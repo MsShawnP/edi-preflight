@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from src.envelope import Envelope, Retailer, TransactionType, EnvelopeError
+from src.envelope import Envelope, Retailer, TransactionType
 from src.x12_tokenizer import Segment
 
 

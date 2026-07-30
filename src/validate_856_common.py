@@ -308,10 +308,16 @@ def check_bsn_purpose(result: ValidationResult, config: RetailerConfig) -> None:
 
 def run_retailer_checks(result: ValidationResult, config: RetailerConfig) -> ValidationResult:
     """Run all standard retailer checks using the given configuration."""
+    # The BSN purpose-code check reads only bsn_data, not the hierarchy, so it
+    # must run even for a structurally broken ASN with no HL tree — otherwise a
+    # retailer-narrowed purpose code (valid globally, disallowed by this
+    # retailer) slips through on exactly the malformed documents most in need
+    # of scrutiny. The remaining checks genuinely require the tree.
+    check_bsn_purpose(result, config)
+
     if not result.hl_tree:
         return result
 
-    check_bsn_purpose(result, config)
     check_hl_hierarchy(result, config)
     check_shipment_level(result, config)
     check_order_level(result, config)

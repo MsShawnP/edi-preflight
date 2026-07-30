@@ -1,7 +1,8 @@
 """UNFI-specific 856 ASN validation (layer 3).
 
-UNFI compliance checks. SSCC-18 is recommended but not strictly
-enforced at all DCs, so we flag it at lower severity than Walmart.
+UNFI compliance checks. SSCC-18 noncompliance is flagged as
+will-cause-chargeback, the same severity the shared container check
+applies to every retailer; only the chargeback fee differs from Walmart.
 Catch-weight enforcement applies to natural/organic bulk items.
 """
 

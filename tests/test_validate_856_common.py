@@ -24,6 +24,33 @@ def _validate(raw: str):
     return run_retailer_checks(result, _CONFIG)
 
 
+class TestBsnPurposeCheckedWithoutHLTree:
+    """The retailer BSN purpose-code check must run even when the ASN has no HL
+    tree — a purpose code valid globally but disallowed by the retailer would
+    otherwise slip through on a structurally broken document."""
+
+    def test_retailer_narrowed_purpose_flagged_on_hl_less_asn(self):
+        raw = (
+            "ISA*00*          *00*          *ZZ*CINDERHAVEN    *ZZ*WALMART        "
+            "*260510*1430*U*00501*000000001*0*P*>~"
+            "GS*SH*CINDERHAVEN*WALMART*20260510*143000*1*X*005010~"
+            "ST*856*0001~"
+            "BSN*01*SHP001*20260510*1430~"  # 01 is globally valid, retailer disallows it
+            "SE*3*0001~"
+            "GE*1*1~"
+            "IEA*1*000000001~"
+        )
+        config = RetailerConfig(
+            name="StrictRetailer", fees=_FEES, allowed_bsn_purpose_codes={"00"}
+        )
+        result = validate_856(parse_envelope(tokenize(raw)))
+        assert not result.hl_tree  # precondition: no hierarchy
+        result = run_retailer_checks(result, config)
+        assert any(
+            f.rule_id == "retailer_bsn_purpose_not_accepted" for f in result.findings
+        )
+
+
 class TestUnknownHLLevel:
     def test_flags_unknown_level_code(self):
         raw = (

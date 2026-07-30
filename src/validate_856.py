@@ -15,7 +15,7 @@ import re
 from dataclasses import dataclass, field
 from enum import Enum
 
-from src.envelope import Envelope, TransactionType, EnvelopeError
+from src.envelope import Envelope, TransactionType
 from src.x12_tokenizer import Segment
 
 

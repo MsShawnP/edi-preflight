@@ -186,6 +186,7 @@ async def parse_edi(
             "hint": getattr(e, "hint", ""),
         })
     except Exception:
+        _log.exception("Unexpected error parsing 850")
         return templates.TemplateResponse(request, "partials/error.html", {
             "error": "An unexpected error occurred while processing the document.",
             "hint": "The document may not be a valid EDI X12 file.",
@@ -251,6 +252,7 @@ def _extract_po_or_error(edi_text: str):
     except (TokenizeError, EnvelopeError, ExtractionError) as e:
         return None, Response(content=str(e), status_code=400, media_type="text/plain")
     except Exception:
+        _log.exception("Unexpected error extracting 850 for export")
         return None, Response(
             content="An unexpected error occurred while processing the document.",
             status_code=400,
@@ -338,6 +340,7 @@ async def validate_edi(
             "hint": getattr(e, "hint", ""),
         })
     except Exception:
+        _log.exception("Unexpected error tokenizing/parsing 856")
         return templates.TemplateResponse(request, "partials/error.html", {
             "error": "An unexpected error occurred while processing the document.",
             "hint": "The document may not be a valid EDI X12 file.",
