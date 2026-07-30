@@ -5,6 +5,7 @@ Uses same visual style as export_pdf.py (850 export).
 """
 
 import io
+from xml.sax.saxutils import escape as _esc
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -58,13 +59,13 @@ def _build_header(result: ValidationResult, retailer_label: str) -> list:
     bsn = result.bsn_data
     meta_parts = []
     if bsn.get("shipment_id"):
-        meta_parts.append(f"<b>Shipment:</b> {bsn['shipment_id']}")
+        meta_parts.append(f"<b>Shipment:</b> {_esc(bsn['shipment_id'])}")
     if bsn.get("date"):
-        meta_parts.append(f"<b>Ship Date:</b> {format_edi_date(bsn['date'])}")
+        meta_parts.append(f"<b>Ship Date:</b> {_esc(format_edi_date(bsn['date']))}")
     if bsn.get("purpose_code"):
         purpose_labels = {"00": "Original", "01": "Cancellation", "05": "Replace"}
         meta_parts.append(
-            f"<b>Purpose:</b> {purpose_labels.get(bsn['purpose_code'], bsn['purpose_code'])}"
+            f"<b>Purpose:</b> {_esc(purpose_labels.get(bsn['purpose_code'], bsn['purpose_code']))}"
         )
 
     if meta_parts:
@@ -153,7 +154,7 @@ def _build_findings_section(
         data.append([
             f.severity.label,
             seg,
-            Paragraph(msg, small),
+            Paragraph(_esc(msg), small),
             fee,
         ])
 
@@ -210,7 +211,7 @@ def _build_chargeback_table(result: ValidationResult) -> list:
         if len(msg) > 80:
             msg = msg[:77] + "..."
         data.append([
-            Paragraph(msg, small),
+            Paragraph(_esc(msg), small),
             f.severity.label,
             format_currency(f.fee),
             f.fee_per,

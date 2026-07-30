@@ -4,7 +4,12 @@ from pathlib import Path
 
 from src.envelope import parse_envelope
 from src.export_validation_pdf import export_validation_pdf
-from src.validate_856 import validate_856
+from src.validate_856 import (
+    Finding,
+    Severity,
+    ValidationResult,
+    validate_856,
+)
 from src.validate_856_walmart import validate_856_walmart
 from src.x12_tokenizer import tokenize
 
@@ -18,6 +23,26 @@ def _load_validate_export(filename: str, retailer_label: str = "Walmart"):
     result = validate_856(envelope)
     result = validate_856_walmart(result)
     return export_validation_pdf(result, retailer_label)
+
+
+class TestValidationPdfEscapesHostileText:
+    """Finding messages echo raw EDI field values (dates, IDs, descriptions).
+    Angle brackets in those reach ReportLab's Paragraph parser and must be
+    escaped, not crash the export."""
+
+    def test_angle_brackets_in_finding_message_do_not_crash(self):
+        result = ValidationResult(findings=[
+            Finding(
+                rule_id="test",
+                severity=Severity.WILL_CAUSE_CHARGEBACK,
+                layer="field",
+                message="BSN03 date '<b>05-10' is not in CCYYMMDD format.",
+                segment_id="BSN",
+                element_id="BSN03",
+            ),
+        ])
+        pdf = export_validation_pdf(result, "Walmart")  # would raise before escaping
+        assert pdf[:5] == b"%PDF-"
 
 
 class TestValidationPdfClean:

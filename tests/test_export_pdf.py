@@ -34,6 +34,19 @@ class TestPdfExportBasicPO:
         assert b"4500012345" in self.pdf_bytes
 
 
+class TestPdfExportEscapesHostileText:
+    """Line-item descriptions and addresses can contain angle brackets; those
+    reach ReportLab's Paragraph mini-HTML parser and must be escaped, not
+    crash the export with a ValueError."""
+
+    def test_angle_brackets_in_description_do_not_crash(self):
+        po = _load_and_extract("850_basic.edi")
+        hostile = replace(po.line_items[0], description="<b>unclosed & <para> tag")
+        po = replace(po, line_items=[hostile, *po.line_items[1:]])
+        pdf = export_850_pdf(po)  # would raise before escaping was added
+        assert pdf[:5] == b"%PDF-"
+
+
 class TestPdfExportCatchWeight:
     def setup_method(self):
         self.po = _load_and_extract("850_catch_weight.edi")

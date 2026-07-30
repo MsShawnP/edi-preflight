@@ -1,4 +1,5 @@
 import io
+from xml.sax.saxutils import escape as _esc
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -31,18 +32,18 @@ def _build_header_section(po: PurchaseOrder) -> list:
     title_style.spaceAfter = 4
 
     elements.append(Paragraph(
-        f"{po.retailer.value.title()} — PO #{po.po_number}",
+        f"{_esc(po.retailer.value.title())} — PO #{_esc(po.po_number)}",
         title_style,
     ))
 
     meta_parts = [
-        f"<b>Date:</b> {format_edi_date(po.po_date)}",
-        f"<b>Type:</b> {po.po_type}",
+        f"<b>Date:</b> {_esc(format_edi_date(po.po_date))}",
+        f"<b>Type:</b> {_esc(po.po_type)}",
     ]
     if po.department:
-        meta_parts.append(f"<b>Dept:</b> {po.department}")
+        meta_parts.append(f"<b>Dept:</b> {_esc(po.department)}")
     if po.terms:
-        meta_parts.append(f"<b>Terms:</b> {po.terms}")
+        meta_parts.append(f"<b>Terms:</b> {_esc(po.terms)}")
 
     body = _STYLES["Normal"].clone("meta")
     meta = Paragraph(" &nbsp;&nbsp;|&nbsp;&nbsp; ".join(meta_parts), body)
@@ -52,7 +53,7 @@ def _build_header_section(po: PurchaseOrder) -> list:
     if po.dates:
         for d in po.dates:
             elements.append(Paragraph(
-                f"<b>{d.label}:</b> {format_edi_date(d.date)}",
+                f"<b>{_esc(d.label)}:</b> {_esc(format_edi_date(d.date))}",
                 _STYLES["Normal"],
             ))
         elements.append(Spacer(1, 8))
@@ -60,9 +61,9 @@ def _build_header_section(po: PurchaseOrder) -> list:
     ship_to = po.ship_to
     if ship_to:
         elements.append(Paragraph("<b>Ship To:</b>", _STYLES["Normal"]))
-        addr_parts = [ship_to.entity_name]
+        addr_parts = [_esc(ship_to.entity_name)]
         if ship_to.street:
-            addr_parts.append(ship_to.street)
+            addr_parts.append(_esc(ship_to.street))
         city_line = ""
         if ship_to.city:
             city_line = ship_to.city
@@ -70,7 +71,7 @@ def _build_header_section(po: PurchaseOrder) -> list:
                 city_line += f", {ship_to.state}"
             city_line += f" {ship_to.zip_code}"
         if city_line:
-            addr_parts.append(city_line)
+            addr_parts.append(_esc(city_line))
         elements.append(Paragraph("<br/>".join(addr_parts), _STYLES["Normal"]))
         elements.append(Spacer(1, 12))
 
@@ -92,7 +93,7 @@ def _build_line_items_table(po: PurchaseOrder) -> list:
     small.leading = 10
 
     for item in po.line_items:
-        desc = item.description
+        desc = _esc(item.description)
         if item.is_catch_weight:
             desc += " [CW]"
         data.append([
