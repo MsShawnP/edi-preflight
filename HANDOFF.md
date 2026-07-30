@@ -9,6 +9,18 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-07-30 16:02
+
+**What changed:** Code review + UI/Lailara-design review of the whole app; fixed every finding across 7 commits, pushed to main (auto-deploy triggered).
+
+**Why:** Ungated public tool must not 500 on the malformed EDI it exists to catch, must not under-report chargeback exposure, and must read as a credible Lailara deliverable.
+
+**State:** 322 tests passing (was 312), tree clean, pushed to origin/main after rebasing over the remote fly.toml warm-machine commit. Fixed: /validate + PDF-export 500s on malformed input, ReportLab markup crash on angle-bracket text, silently-dropped out-of-order HL nodes, CSV formula injection, plus a11y (ARIA tabs, aria-live results, focus mgmt, hardened sample loader) and design (container 1200px, differentiated will/may chargeback severity). NOT done (flagged, out of scope): findings-block Jinja macro dedup; static assets have no cache-busting so returning users see stale CSS/JS after deploy.
+
+**Next:** Confirm the GitHub Actions deploy went green and spot-check edi.lailarallc.com renders the new severity styling; then decide whether to address the static-asset cache-busting gap.
+
+---
+
 ## 2026-07-18 — Deploy + smoke-test >1 MB paste fix
 
 **Started from:** Clean main branch. The `_LiftFormLimitRoute` fix (lifting Starlette's 1 MB form-parser cap so the app's own 2 MB limit governs) was committed but not yet deployed or verified in production.
