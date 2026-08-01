@@ -68,19 +68,21 @@ class TestMissingCatchWeight:
         assert len(cw_findings) == 2  # Two LB items without MEA
 
     def test_fee_per_item(self):
+        # SQEP PO-accuracy per-case charge ($1); the $200 admin fee per defect
+        # event is not modeled per-unit — see the fee-table comment.
         f = next(f for f in self.result.findings if f.rule_id == "missing_catch_weight")
-        assert f.fee == 100.00
+        assert f.fee == 1.00
         assert f.fee_per == "item"
 
     def test_severity_will_cause_chargeback(self):
         f = next(f for f in self.result.findings if f.rule_id == "missing_catch_weight")
         assert f.severity == Severity.WILL_CAUSE_CHARGEBACK
 
-    def test_total_fees_200(self):
+    def test_total_catch_weight_fees_sum(self):
         cw_fees = sum(
             f.fee for f in self.result.findings if f.rule_id == "missing_catch_weight"
         )
-        assert cw_fees == 200.00
+        assert cw_fees == 2.00  # two flagged items x $1
 
     def test_non_catch_weight_item_not_flagged(self):
         # The third item (CS = cases) should not trigger catch-weight check

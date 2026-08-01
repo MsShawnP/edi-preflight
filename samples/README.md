@@ -1,7 +1,7 @@
 # Sample EDI Documents
 
 Synthetic EDI X12 documents for testing and demonstration. All documents
-use the fictional company "Cinderhaven Foods" as the sender/supplier.
+use the fictional company "Cinderhaven Provisions" as the sender/supplier.
 
 ## Document count: 26
 
