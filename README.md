@@ -49,7 +49,7 @@ Opens at `http://localhost:8000`. No database, no external services.
 pytest
 ```
 
-322 tests covering tokenization, envelope parsing, 850 extraction (all 5 retailers), 856 validation (structural, field-level, and retailer-specific rules), CSV/PDF export, input validation, and all HTTP endpoints.
+327 tests covering tokenization, envelope parsing, 850 extraction (all 5 retailers), 856 validation (structural, field-level, and retailer-specific rules), CSV/PDF export, input validation, all HTTP endpoints, and a demo golden-file lock on the samples the deployed demo serves.
 
 **Deploy:** `Dockerfile` and `fly.toml` are configured for Fly.io:
 
@@ -87,7 +87,7 @@ src/                   FastAPI app, parser, validators, exporters
   static/              CSS, JS, HTMX
 rules/                 Retailer EDI specs in YAML (10 files, reference docs)
 samples/               26 synthetic EDI files across 5 retailers
-tests/                 20 test modules, 322 tests
+tests/                 21 test modules, 327 tests
 Dockerfile             Python 3.13-slim, non-root user
 fly.toml               Fly.io deployment config
 pyproject.toml         Dependencies and project metadata
