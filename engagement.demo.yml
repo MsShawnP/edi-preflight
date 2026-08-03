@@ -1,0 +1,14 @@
+# Demo engagement config (safe to deploy: demo: true).
+client:
+  name: "Cinderhaven Provisions (demo)"
+engagement:
+  id: "DEMO-EDI-001"
+as_of_date: "2026-05-10"
+prepared_by: "Lailara LLC"
+demo: true
+# Partner-ID map: a client's trading-partner identifier (an ISA/GS sender or
+# receiver id, exact or case-insensitive substring) -> retailer ruleset. The
+# engine already recognizes the majors by name/DUNS, so this is only needed for
+# ids it can't infer. Keys: walmart | amazon | unfi | kehe | costco.
+partners:
+  "0078742099999": walmart   # illustrative: a Walmart DC id not in the built-in table
