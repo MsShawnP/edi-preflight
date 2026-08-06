@@ -457,8 +457,9 @@ def run(config_path: str, input_path: str, out_dir: str, *, final: bool = False)
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    # Fold the partner map into provenance so a non-empty map is captured and
-    # reproducible even though it lives outside the lib's config_hash payload.
+    # The partner map now folds into config_hash (lailara_engagement >=0.2.1
+    # hashes extra top-level config blocks), so a change to it already moves the
+    # provenance hash. This surfaces the same fact human-readably in the footer.
     extra = {}
     if partners:
         blob = repr(sorted((str(k), str(v)) for k, v in partners.items())).encode()
