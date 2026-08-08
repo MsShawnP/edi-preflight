@@ -155,3 +155,27 @@ def test_final_flag_drops_watermark(cfg, tmp_path):
     html = Path(result["report"]).read_text(encoding="utf-8")
     assert "ll-draft" not in html
     assert "DRAFT" not in html
+
+
+def test_legacy_as_of_date_config_renders_identically(tmp_path):
+    """Back-compat (0.d split): a config using only the legacy `as_of_date` must keep
+    working and render the same As-of date as the new `data_as_of` key. Proof, not claim."""
+    import re
+    src = tmp_path / "asn.edi"
+    src.write_text(_clean_856(), encoding="utf-8")
+
+    def _asof(report_path):
+        html = Path(report_path).read_text(encoding="utf-8")
+        m = re.search(r"As-of date:.*?([0-9]{4}-[0-9]{2}-[0-9]{2})", html)
+        return m.group(1) if m else None
+
+    legacy = tmp_path / "legacy.yml"
+    legacy.write_text("client: {name: X}\nengagement: {id: E1}\nas_of_date: 2026-05-10\ndemo: true\n", encoding="utf-8")
+    newkey = tmp_path / "newkey.yml"
+    newkey.write_text("client: {name: X}\nengagement: {id: E1}\ndata_as_of: 2026-05-10\ndemo: true\n", encoding="utf-8")
+
+    r_legacy = client_mode.run(str(legacy), str(src), str(tmp_path / "o_legacy"))
+    r_new = client_mode.run(str(newkey), str(src), str(tmp_path / "o_new"))
+    assert r_legacy["status"] == "ok"
+    assert _asof(r_legacy["report"]) == "2026-05-10"            # legacy still renders it
+    assert _asof(r_legacy["report"]) == _asof(r_new["report"])  # identical to data_as_of
