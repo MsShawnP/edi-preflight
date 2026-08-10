@@ -1,0 +1,22 @@
+# Demo engagement config (safe to deploy: demo: true).
+client:
+  name: "Cinderhaven Provisions (demo)"
+engagement:
+  id: "DEMO-EDI-001"
+# data_as_of = the date the underlying data is anchored to. edi-preflight validates
+# EDI documents (not a sales-analytics window), so this is the demo EDI batch's
+# transaction date — the sample 856/850 carry BSN/BEG dates of 2026-05-10 (NOT the
+# 2026-01-31 sales window, which is inapplicable here). report_date = when the
+# deliverable was authored. For this same-day validation they coincide; both are
+# carried, labeled distinctly, on the provenance footer. (`as_of_date` remains an
+# accepted back-compat alias for `data_as_of`.)
+data_as_of: "2026-05-10"
+report_date: "2026-05-10"
+prepared_by: "Lailara LLC"
+demo: true
+# Partner-ID map: a client's trading-partner identifier (an ISA/GS sender or
+# receiver id, exact or case-insensitive substring) -> retailer ruleset. The
+# engine already recognizes the majors by name/DUNS, so this is only needed for
+# ids it can't infer. Keys: walmart | amazon | unfi | kehe | costco.
+partners:
+  "0078742099999": walmart   # illustrative: a Walmart DC id not in the built-in table

@@ -9,3 +9,9 @@ docs/
 *.md
 !README.md
 .env
+
+# --- lailara engagement scaffold ---
+client-data/
+client-output/
+engagement.yml
+engagement.yaml

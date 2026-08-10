@@ -49,7 +49,7 @@ Opens at `http://localhost:8000`. No database, no external services.
 pytest
 ```
 
-322 tests covering tokenization, envelope parsing, 850 extraction (all 5 retailers), 856 validation (structural, field-level, and retailer-specific rules), CSV/PDF export, input validation, and all HTTP endpoints.
+327 tests covering tokenization, envelope parsing, 850 extraction (all 5 retailers), 856 validation (structural, field-level, and retailer-specific rules), CSV/PDF export, input validation, all HTTP endpoints, and a demo golden-file lock on the samples the deployed demo serves. An additional client-mode suite runs when the optional `lailara_engagement` package is installed.
 
 **Deploy:** `Dockerfile` and `fly.toml` are configured for Fly.io:
 
@@ -58,6 +58,18 @@ flyctl deploy
 ```
 
 Live at [edi.lailarallc.com](https://edi.lailarallc.com).
+
+## Client engagement use
+
+For paid engagements the tool runs fully local against a client's own EDI files — nothing is uploaded, stored, or deployed. Point it at a single file or a directory:
+
+```
+pip install -e ../engagement-template/lib   # shared engagement scaffold
+python client_mode.py --config engagement.yml --input client-data/asns/ \
+    --out client-output [--final]
+```
+
+It reads the 850/856 documents, applies the retailer ruleset (steered by a partner-ID map in `engagement.yml` when a trading-partner ID isn't auto-detected), and writes a branded, provenance-footed report to `client-output/` (gitignored) — or a Data Readiness Report naming what's wrong if nothing is usable. Reports are DRAFT-watermarked until `--final`. See [INPUT-SPEC.md](INPUT-SPEC.md) for the full input contract and `engagement.demo.yml` for a safe-to-run example.
 
 ## Tech stack
 
@@ -87,7 +99,7 @@ src/                   FastAPI app, parser, validators, exporters
   static/              CSS, JS, HTMX
 rules/                 Retailer EDI specs in YAML (10 files, reference docs)
 samples/               26 synthetic EDI files across 5 retailers
-tests/                 20 test modules, 322 tests
+tests/                 22 test modules, 327 tests (+ optional client-mode suite)
 Dockerfile             Python 3.13-slim, non-root user
 fly.toml               Fly.io deployment config
 pyproject.toml         Dependencies and project metadata
